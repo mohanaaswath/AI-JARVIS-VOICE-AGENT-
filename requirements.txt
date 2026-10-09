@@ -1,0 +1,24 @@
+# livekit/agent-skills  
+
+# "livekit-agents[google]~=1.8"
+
+
+livekit-agents
+livekit-agents[google]~=1.8
+livekit-plugins-noise-cancellation~=0.2
+python-dotenv 
+
+
+# git init
+# git add README.md
+# git commit -m "first commit"
+# git branch -M main
+#git remote add origin https://github.com/mohanaaswath/AI-JARVIS-VOICE-AGENT-.git
+# git push -u origin main -->
+
+
+
+# <!-- git status
+# git remote add origin https://github.com/mohanaaswath/AI-JARVIS-VOICE-AGENT-.git
+# git branch -M main
+# git push -u origin main--> 

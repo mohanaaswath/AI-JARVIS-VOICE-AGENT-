@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "building-livekit-agents": {
+      "source": "livekit/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/building-livekit-agents/SKILL.md",
+      "computedHash": "aecac5d40d4119c79432507b0f9274152ecaafc29e9a8892c3b73afe24021869"
+    }
+  }
+}
