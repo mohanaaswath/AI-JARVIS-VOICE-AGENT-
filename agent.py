@@ -2,9 +2,9 @@ from dotenv import load_dotenv
 
 from livekit import agents
 from livekit.agents import AgentServer, AgentSession, Agent, room_io
-from livekit.plugins import ai_coustics, google
+from livekit.plugins import google, noise_cancellation
 
-load_dotenv(".env.local")
+load_dotenv(".env")
 
 class Assistant(Agent):
     def __init__(self) -> None:
@@ -27,7 +27,7 @@ async def my_agent(ctx: agents.JobContext):
         agent=Assistant(),
         room_options=room_io.RoomOptions(
             audio_input=room_io.AudioInputOptions(
-                noise_cancellation=ai_coustics.audio_enhancement(model=ai_coustics.EnhancerModel.QUAIL_VF_S),
+                noise_cancellation=noise_cancellation.NC(),
             ),
         ),
     )
