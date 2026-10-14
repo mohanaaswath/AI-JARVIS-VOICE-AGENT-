@@ -22,3 +22,6 @@ python-dotenv
 # git remote add origin https://github.com/mohanaaswath/AI-JARVIS-VOICE-AGENT-.git
 # git branch -M main
 # git push -u origin main--> 
+
+
+#to run this assistant: python agent.py console
