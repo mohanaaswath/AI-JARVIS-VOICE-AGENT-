@@ -3,12 +3,13 @@ from dotenv import load_dotenv
 from livekit import agents
 from livekit.agents import AgentServer, AgentSession, Agent, room_io
 from livekit.plugins import google, noise_cancellation
+from prompt import Agent_Response , Agent_Instruction
 
 load_dotenv(".env")
 
 class Assistant(Agent):
     def __init__(self) -> None:
-        super().__init__(instructions="You are a helpful voice AI assistant.")
+        super().__init__(instructions=Agent_Instruction)
 
 server = AgentServer()
 
@@ -18,7 +19,7 @@ async def my_agent(ctx: agents.JobContext):
     llm=google.realtime.RealtimeModel(
         voice="Puck",
         temperature=0.8,
-        instructions="You are a helpful assistant",
+        instructions=Agent_Instruction
     ),
 )
 
@@ -33,7 +34,7 @@ async def my_agent(ctx: agents.JobContext):
     )
 
     await session.generate_reply(
-        instructions="Greet the user and offer your assistance. You should start by speaking in English."
+        instructions=Agent_Response
     )
 
 
