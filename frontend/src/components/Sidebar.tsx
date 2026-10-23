@@ -1,0 +1,219 @@
+import React from "react";
+import {
+  MessageSquare,
+  Mic,
+  LayoutDashboard,
+  Settings,
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+  Zap,
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import type { AppView } from "../types";
+
+interface SidebarProps {
+  currentView: AppView;
+  onViewChange: (v: AppView) => void;
+  collapsed: boolean;
+  onToggleCollapse: () => void;
+}
+
+const NAV_ITEMS: { id: AppView; label: string; icon: React.ReactNode }[] = [
+  { id: "dashboard", label: "Dashboard", icon: <LayoutDashboard size={18} /> },
+  { id: "chat", label: "Chat", icon: <MessageSquare size={18} /> },
+  { id: "voice", label: "Voice", icon: <Mic size={18} /> },
+  { id: "settings", label: "Settings", icon: <Settings size={18} /> },
+];
+
+export default function Sidebar({
+  currentView,
+  onViewChange,
+  collapsed,
+  onToggleCollapse,
+}: SidebarProps) {
+  return (
+    <motion.aside
+      animate={{ width: collapsed ? 64 : 240 }}
+      transition={{ duration: 0.25, ease: "easeInOut" }}
+      style={{
+        background: "rgba(13,17,23,0.95)",
+        borderRight: "1px solid rgba(139,92,246,0.15)",
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
+        position: "relative",
+        flexShrink: 0,
+      }}
+    >
+      {/* Logo */}
+      <div
+        style={{
+          padding: "1.25rem 1rem",
+          display: "flex",
+          alignItems: "center",
+          gap: "0.75rem",
+          borderBottom: "1px solid rgba(139,92,246,0.1)",
+        }}
+      >
+        <div
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: "50%",
+            background: "linear-gradient(135deg,#8b5cf6,#06b6d4)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+          }}
+        >
+          <Zap size={18} color="white" />
+        </div>
+        <AnimatePresence>
+          {!collapsed && (
+            <motion.span
+              initial={{ opacity: 0, x: -8 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -8 }}
+              transition={{ duration: 0.15 }}
+              style={{
+                fontSize: "1.1rem",
+                fontWeight: 700,
+                background: "linear-gradient(135deg,#8b5cf6,#06b6d4)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                whiteSpace: "nowrap",
+              }}
+            >
+              JARVIS AI
+            </motion.span>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* New Chat button */}
+      <div style={{ padding: "0.75rem 0.75rem 0" }}>
+        <button
+          onClick={() => onViewChange("chat")}
+          style={{
+            width: "100%",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.5rem",
+            padding: collapsed ? "0.625rem" : "0.625rem 0.875rem",
+            justifyContent: collapsed ? "center" : "flex-start",
+            background: "rgba(139,92,246,0.12)",
+            border: "1px solid rgba(139,92,246,0.3)",
+            borderRadius: "0.75rem",
+            color: "#a78bfa",
+            cursor: "pointer",
+            fontSize: "0.85rem",
+            fontWeight: 500,
+            transition: "all 0.2s",
+          }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.background =
+              "rgba(139,92,246,0.2)";
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.background =
+              "rgba(139,92,246,0.12)";
+          }}
+        >
+          <Plus size={16} />
+          <AnimatePresence>
+            {!collapsed && (
+              <motion.span
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                New Chat
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </button>
+      </div>
+
+      {/* Nav items */}
+      <nav style={{ padding: "0.5rem 0.5rem", flex: 1, marginTop: "0.5rem" }}>
+        {NAV_ITEMS.map((item) => {
+          const active = currentView === item.id;
+          return (
+            <button
+              key={item.id}
+              onClick={() => onViewChange(item.id)}
+              style={{
+                width: "100%",
+                display: "flex",
+                alignItems: "center",
+                gap: "0.75rem",
+                padding: collapsed ? "0.75rem" : "0.75rem 0.875rem",
+                justifyContent: collapsed ? "center" : "flex-start",
+                background: active ? "rgba(139,92,246,0.15)" : "transparent",
+                borderLeft: active ? "2px solid #8b5cf6" : "2px solid transparent",
+                borderTop: "none",
+                borderRight: "none",
+                borderBottom: "none",
+                borderRadius: "0 0.5rem 0.5rem 0",
+                color: active ? "#f1f5f9" : "#64748b",
+                cursor: "pointer",
+                fontSize: "0.875rem",
+                fontWeight: active ? 600 : 400,
+                marginBottom: "0.25rem",
+                transition: "all 0.15s",
+              }}
+              onMouseEnter={(e) => {
+                if (!active)
+                  (e.currentTarget as HTMLButtonElement).style.color = "#94a3b8";
+              }}
+              onMouseLeave={(e) => {
+                if (!active)
+                  (e.currentTarget as HTMLButtonElement).style.color = "#64748b";
+              }}
+              title={collapsed ? item.label : undefined}
+            >
+              {item.icon}
+              <AnimatePresence>
+                {!collapsed && (
+                  <motion.span
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    style={{ whiteSpace: "nowrap" }}
+                  >
+                    {item.label}
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </button>
+          );
+        })}
+      </nav>
+
+      {/* Collapse toggle */}
+      <button
+        onClick={onToggleCollapse}
+        style={{
+          position: "absolute",
+          top: "1.25rem",
+          right: -12,
+          width: 24,
+          height: 24,
+          borderRadius: "50%",
+          background: "#1e293b",
+          border: "1px solid rgba(139,92,246,0.3)",
+          color: "#8b5cf6",
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 10,
+        }}
+      >
+        {collapsed ? <ChevronRight size={12} /> : <ChevronLeft size={12} />}
+      </button>
+    </motion.aside>
+  );
+}
