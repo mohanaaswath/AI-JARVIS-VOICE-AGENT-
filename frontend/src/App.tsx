@@ -8,7 +8,9 @@ import type { AppView } from "./types";
 
 export default function App() {
   const [view, setView] = useState<AppView>("dashboard");
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    () => window.innerWidth <= 640
+  );
 
   const renderView = () => {
     switch (view) {
@@ -44,6 +46,7 @@ export default function App() {
       <main
         style={{
           flex: 1,
+          minWidth: 0,
           overflow: "auto",
           display: "flex",
           flexDirection: "column",

@@ -31,7 +31,13 @@
     color: var(--text-primary);
     font-family: "Inter", "Segoe UI", sans-serif;
     min-height: 100vh;
+    overflow: hidden;
     -webkit-font-smoothing: antialiased;
+  }
+
+  #root {
+    width: 100%;
+    min-height: 100vh;
   }
 
   ::-webkit-scrollbar {

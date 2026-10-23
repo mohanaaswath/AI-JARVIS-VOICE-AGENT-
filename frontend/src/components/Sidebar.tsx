@@ -41,7 +41,7 @@ export default function Sidebar({
         borderRight: "1px solid rgba(139,92,246,0.15)",
         display: "flex",
         flexDirection: "column",
-        overflow: "hidden",
+        overflow: "visible",
         position: "relative",
         flexShrink: 0,
       }}
@@ -198,7 +198,7 @@ export default function Sidebar({
         style={{
           position: "absolute",
           top: "1.25rem",
-          right: -12,
+          right: 8,
           width: 24,
           height: 24,
           borderRadius: "50%",
