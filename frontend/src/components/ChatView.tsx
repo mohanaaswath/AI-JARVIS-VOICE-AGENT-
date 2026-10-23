@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Send, RotateCcw, Copy, Check, Bot, User } from "lucide-react";
 import ReactMarkdown from "react-markdown";
-import { sendMessage, resetChat, streamChat } from "../lib/api";
+import { resetChat, streamChat } from "../lib/api";
 import type { Message } from "../types";
 
 const SUGGESTED = [

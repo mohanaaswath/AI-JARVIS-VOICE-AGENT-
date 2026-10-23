@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mic, MicOff, PhoneOff, Phone, Wifi, WifiOff, AlertCircle } from "lucide-react";
+import { Mic, MicOff, PhoneOff, Phone, Wifi, AlertCircle } from "lucide-react";
 import { fetchLiveKitToken, fetchLiveKitStatus } from "../lib/api";
 
 type VoiceState = "idle" | "connecting" | "connected" | "listening" | "speaking" | "error";
@@ -33,10 +33,10 @@ export default function VoiceView() {
       // Get a short-lived token from our backend
       const roomName = `jarvis-${Date.now()}`;
       const identity = `user-${crypto.randomUUID().slice(0, 8)}`;
-      const tokenData = await fetchLiveKitToken(roomName, identity);
+      await fetchLiveKitToken(roomName, identity);
 
       // NOTE: To actually JOIN the LiveKit room, install @livekit/components-react
-      // and use <LiveKitRoom token={tokenData.token} serverUrl={tokenData.url} />.
+      // and use the returned token and URL with <LiveKitRoom />.
       // For now we show the token acquisition was successful.
       console.log("LiveKit token acquired:", { room: roomName, identity });
       setVoiceState("connected");
