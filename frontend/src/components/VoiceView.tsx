@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mic, MicOff, PhoneOff, Phone, Wifi, AlertCircle } from "lucide-react";
+import { Room, RoomEvent, Track } from "livekit-client";
 import { fetchLiveKitToken, fetchLiveKitStatus } from "../lib/api";
 
 type VoiceState = "idle" | "connecting" | "connected" | "listening" | "speaking" | "error";
@@ -11,6 +12,7 @@ export default function VoiceView() {
   const [lkConfigured, setLkConfigured] = useState<boolean | null>(null);
   const [lkUrl, setLkUrl] = useState<string | null>(null);
   const [statusMsg, setStatusMsg] = useState("Ready to connect");
+  const roomRef = useRef<Room | null>(null);
 
   useEffect(() => {
     fetchLiveKitStatus()
@@ -21,27 +23,65 @@ export default function VoiceView() {
       .catch(() => setLkConfigured(false));
   }, []);
 
+  useEffect(() => {
+    return () => {
+      roomRef.current?.disconnect();
+    };
+  }, []);
+
   const startSession = async () => {
     setError(null);
     setVoiceState("connecting");
     setStatusMsg("Connecting to voice agent…");
 
     try {
-      // Request microphone permission first
-      await navigator.mediaDevices.getUserMedia({ audio: true });
-
-      // Get a short-lived token from our backend
       const roomName = `jarvis-${Date.now()}`;
       const identity = `user-${crypto.randomUUID().slice(0, 8)}`;
-      await fetchLiveKitToken(roomName, identity);
+      const { token, url } = await fetchLiveKitToken(roomName, identity);
+      const room = new Room();
+      roomRef.current = room;
+      let isConnected = false;
 
-      // NOTE: To actually JOIN the LiveKit room, install @livekit/components-react
-      // and use the returned token and URL with <LiveKitRoom />.
-      // For now we show the token acquisition was successful.
-      console.log("LiveKit token acquired:", { room: roomName, identity });
-      setVoiceState("connected");
-      setStatusMsg("Connected — voice agent is active");
+      room.on(RoomEvent.TrackSubscribed, (track) => {
+        if (track.kind === Track.Kind.Audio) {
+          const audioElement = track.attach();
+          audioElement.autoplay = true;
+          audioElement.style.display = "none";
+          document.body.appendChild(audioElement);
+          setVoiceState("speaking");
+          setStatusMsg("Assistant is speaking");
+        }
+      });
+      room.on(RoomEvent.TrackUnsubscribed, (track) => {
+        track.detach().forEach((element) => element.remove());
+        if (isConnected) {
+          setVoiceState("listening");
+          setStatusMsg("Listening…");
+        }
+      });
+      room.on(RoomEvent.ActiveSpeakersChanged, (speakers) => {
+        if (speakers.some((speaker) => speaker.identity !== identity)) {
+          setVoiceState("speaking");
+          setStatusMsg("Assistant is speaking");
+        } else if (isConnected) {
+          setVoiceState("listening");
+          setStatusMsg("Listening…");
+        }
+      });
+      room.on(RoomEvent.Disconnected, () => {
+        roomRef.current = null;
+        setVoiceState("idle");
+        setStatusMsg("Session ended");
+      });
+
+      await room.connect(url, token);
+      isConnected = true;
+      await room.localParticipant.setMicrophoneEnabled(true);
+      setVoiceState("listening");
+      setStatusMsg("Listening…");
     } catch (err: unknown) {
+      roomRef.current?.disconnect();
+      roomRef.current = null;
       const msg = err instanceof Error ? err.message : "Connection failed";
       if (msg.includes("Permission denied") || msg.includes("NotAllowedError")) {
         setError("Microphone access denied. Please allow microphone permission and try again.");
@@ -54,6 +94,8 @@ export default function VoiceView() {
   };
 
   const endSession = () => {
+    roomRef.current?.disconnect();
+    roomRef.current = null;
     setVoiceState("idle");
     setStatusMsg("Session ended");
     setError(null);

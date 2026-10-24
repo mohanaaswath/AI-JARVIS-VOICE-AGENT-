@@ -57,6 +57,10 @@ async def livekit_status(request: Request) -> dict:
     """Returns whether LiveKit is configured (without revealing secrets)."""
     settings = get_settings()
     return {
-        "configured": bool(settings.LIVEKIT_API_KEY and settings.LIVEKIT_API_SECRET),
+        "configured": LiveKitService(
+            settings.LIVEKIT_API_KEY,
+            settings.LIVEKIT_API_SECRET,
+            settings.LIVEKIT_URL,
+        ).is_available,
         "url": settings.LIVEKIT_URL or None,
     }

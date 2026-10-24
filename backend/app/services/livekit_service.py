@@ -8,9 +8,14 @@ Strategy (in priority order):
 """
 import logging
 import time
-import json
+from datetime import timedelta
 
 logger = logging.getLogger(__name__)
+
+
+def _is_real_credential(value: str) -> bool:
+    return bool(value and not set(value).issubset({"•", "*", "x", "X"}))
+
 
 # ── Try livekit.api (official SDK) ───────────────────────────────────────────
 try:
@@ -69,9 +74,9 @@ class LiveKitService:
         Creates a short-lived LiveKit JWT for the frontend to join a room.
         Tries livekit.api SDK first, then PyJWT fallback, then raises if neither available.
         """
-        if not self.api_key or not self.api_secret:
+        if not _is_real_credential(self.api_key) or not _is_real_credential(self.api_secret):
             raise RuntimeError(
-                "LIVEKIT_API_KEY and LIVEKIT_API_SECRET must be set in your .env file."
+                "LIVEKIT_API_KEY and LIVEKIT_API_SECRET must contain the real LiveKit credentials."
             )
 
         if _LIVEKIT_SDK == "livekit-api":
@@ -80,7 +85,7 @@ class LiveKitService:
                 .with_identity(participant_identity)
                 .with_name(participant_identity)
                 .with_grants(VideoGrants(room_join=True, room=room_name))
-                .with_ttl(ttl_seconds)
+                .with_ttl(timedelta(seconds=ttl_seconds))
                 .to_jwt()
             )
             return token
@@ -102,4 +107,8 @@ class LiveKitService:
     @property
     def is_available(self) -> bool:
         """True if credentials are set AND we can generate a token."""
-        return bool(self.api_key and self.api_secret and _LIVEKIT_SDK is not None)
+        return bool(
+            _is_real_credential(self.api_key)
+            and _is_real_credential(self.api_secret)
+            and _LIVEKIT_SDK is not None
+        )
