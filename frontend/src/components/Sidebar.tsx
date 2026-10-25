@@ -1,12 +1,10 @@
 import React from "react";
 import {
-  MessageSquare,
   Mic,
   LayoutDashboard,
   Settings,
   ChevronLeft,
   ChevronRight,
-  Plus,
   Zap,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -21,7 +19,6 @@ interface SidebarProps {
 
 const NAV_ITEMS: { id: AppView; label: string; icon: React.ReactNode }[] = [
   { id: "dashboard", label: "Dashboard", icon: <LayoutDashboard size={18} /> },
-  { id: "chat", label: "Chat", icon: <MessageSquare size={18} /> },
   { id: "voice", label: "Voice", icon: <Mic size={18} /> },
   { id: "settings", label: "Settings", icon: <Settings size={18} /> },
 ];
@@ -90,50 +87,6 @@ export default function Sidebar({
             </motion.span>
           )}
         </AnimatePresence>
-      </div>
-
-      {/* New Chat button */}
-      <div style={{ padding: "0.75rem 0.75rem 0" }}>
-        <button
-          onClick={() => onViewChange("chat")}
-          style={{
-            width: "100%",
-            display: "flex",
-            alignItems: "center",
-            gap: "0.5rem",
-            padding: collapsed ? "0.625rem" : "0.625rem 0.875rem",
-            justifyContent: collapsed ? "center" : "flex-start",
-            background: "rgba(139,92,246,0.12)",
-            border: "1px solid rgba(139,92,246,0.3)",
-            borderRadius: "0.75rem",
-            color: "#a78bfa",
-            cursor: "pointer",
-            fontSize: "0.85rem",
-            fontWeight: 500,
-            transition: "all 0.2s",
-          }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.background =
-              "rgba(139,92,246,0.2)";
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.background =
-              "rgba(139,92,246,0.12)";
-          }}
-        >
-          <Plus size={16} />
-          <AnimatePresence>
-            {!collapsed && (
-              <motion.span
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-              >
-                New Chat
-              </motion.span>
-            )}
-          </AnimatePresence>
-        </button>
       </div>
 
       {/* Nav items */}

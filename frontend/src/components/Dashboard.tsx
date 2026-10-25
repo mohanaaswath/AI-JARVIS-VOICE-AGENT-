@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
-  MessageSquare,
   Mic,
   Activity,
   CheckCircle,
@@ -18,7 +17,6 @@ interface DashboardProps {
 export default function Dashboard({ onNavigate }: DashboardProps) {
   const [health, setHealth] = useState<HealthStatus>({
     status: "unknown",
-    google_ai: false,
     livekit: false,
   });
   const [loading, setLoading] = useState(true);
@@ -26,9 +24,9 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   useEffect(() => {
     fetchHealth()
       .then((h) =>
-        setHealth({ status: h.status, google_ai: h.google_ai, livekit: h.livekit })
+        setHealth({ status: h.status, livekit: h.livekit })
       )
-      .catch(() => setHealth({ status: "degraded", google_ai: false, livekit: false }))
+      .catch(() => setHealth({ status: "degraded", livekit: false }))
       .finally(() => setLoading(false));
   }, []);
 
@@ -39,15 +37,6 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   };
 
   const cards = [
-    {
-      id: "dash-chat-card",
-      title: "Text Chat",
-      desc: "Chat with JARVIS using Google Gemini",
-      icon: <MessageSquare size={22} />,
-      color: "#8b5cf6",
-      view: "chat" as AppView,
-      available: health.google_ai,
-    },
     {
       id: "dash-voice-card",
       title: "Voice Assistant",
@@ -113,7 +102,6 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
 
         <div style={{ display: "flex", gap: "1.5rem", flexWrap: "wrap" }}>
           {[
-            { label: "Google AI (Gemini)", ok: health.google_ai },
             { label: "LiveKit Voice", ok: health.livekit },
           ].map(({ label, ok }) => (
             <div key={label} style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
@@ -202,11 +190,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
           lineHeight: 1.7,
         }}
       >
-        <strong style={{ color: "#a78bfa" }}>💡 Architecture Note:</strong> Text chat uses{" "}
-        <code style={{ color: "#06b6d4" }}>Gemini 1.5 Flash</code> with the same{" "}
-        <code style={{ color: "#06b6d4" }}>Agent_Instruction</code> from your{" "}
-        <code>prompt.py</code>. Voice uses your existing{" "}
-        <code>agent.py</code> LiveKit session — run it separately with{" "}
+        <strong style={{ color: "#a78bfa" }}>💡 Voice setup:</strong> Start your LiveKit agent with{" "}
         <code style={{ color: "#8b5cf6" }}>python agent.py start</code>.
       </motion.div>
     </div>

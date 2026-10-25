@@ -1,11 +1,15 @@
+from pathlib import Path
+import os
 from dotenv import load_dotenv
+
+PROJECT_ROOT = Path(__file__).resolve().parent
+load_dotenv(PROJECT_ROOT / ".env")
+load_dotenv(PROJECT_ROOT / "frontend" / ".env", override=True)
 
 from livekit import agents
 from livekit.agents import AgentServer, AgentSession, Agent, room_io
 from livekit.plugins import google, noise_cancellation
 from prompt import Agent_Response , Agent_Instruction
-
-load_dotenv(".env")
 
 class Assistant(Agent):
     def __init__(self) -> None:
@@ -13,7 +17,7 @@ class Assistant(Agent):
 
 server = AgentServer()
 
-@server.rtc_session(agent_name="my-agent")
+@server.rtc_session(agent_name=os.getenv("LIVEKIT_AGENT_NAME", "my-agent"))
 async def my_agent(ctx: agents.JobContext):
     session = AgentSession(
     llm=google.realtime.RealtimeModel(

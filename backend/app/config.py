@@ -5,18 +5,19 @@ import os
 from functools import lru_cache
 from dotenv import load_dotenv
 
-# Load the root-level .env (one directory up from backend/)
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "..", "..", ".env"))
+# Load project settings while preferring the frontend/.env file used by this
+# local setup. Vite only exposes VITE_* variables to browser code.
+_PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+load_dotenv(dotenv_path=os.path.join(_PROJECT_ROOT, ".env"))
+load_dotenv(dotenv_path=os.path.join(_PROJECT_ROOT, "frontend", ".env"), override=True)
 
 
 class Settings:
-    # Google AI
-    GOOGLE_API_KEY: str = os.getenv("GOOGLE_API_KEY", "")
-
     # LiveKit
     LIVEKIT_URL: str = os.getenv("LIVEKIT_URL", "")
     LIVEKIT_API_KEY: str = os.getenv("LIVEKIT_API_KEY", "")
     LIVEKIT_API_SECRET: str = os.getenv("LIVEKIT_API_SECRET", "")
+    LIVEKIT_AGENT_NAME: str = os.getenv("LIVEKIT_AGENT_NAME", "my-agent")
 
     # App
     ALLOWED_ORIGINS: list[str] = os.getenv(

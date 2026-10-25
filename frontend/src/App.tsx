@@ -1,13 +1,12 @@
 import { useState } from "react";
 import Sidebar from "./components/Sidebar";
 import Dashboard from "./components/Dashboard";
-import ChatView from "./components/ChatView";
 import VoiceView from "./components/VoiceView";
 import SettingsView from "./components/SettingsView";
 import type { AppView } from "./types";
 
 export default function App() {
-  const [view, setView] = useState<AppView>("dashboard");
+  const [view, setView] = useState<AppView>("voice");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
     () => window.innerWidth <= 640
   );
@@ -16,8 +15,6 @@ export default function App() {
     switch (view) {
       case "dashboard":
         return <Dashboard onNavigate={setView} />;
-      case "chat":
-        return <ChatView />;
       case "voice":
         return <VoiceView />;
       case "settings":

@@ -1,17 +1,7 @@
-import { useState } from "react";
 import { motion } from "framer-motion";
-import { Moon, Trash2, Info, Volume2 } from "lucide-react";
-import { resetChat } from "../lib/api";
+import { Moon, Info, Volume2 } from "lucide-react";
 
 export default function SettingsView() {
-  const [cleared, setCleared] = useState(false);
-
-  const handleClearHistory = async () => {
-    await resetChat();
-    setCleared(true);
-    setTimeout(() => setCleared(false), 3000);
-  };
-
   return (
     <div style={{ padding: "2rem", maxWidth: 640, margin: "0 auto" }}>
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
@@ -40,41 +30,9 @@ export default function SettingsView() {
             />
           </Section>
 
-          {/* Conversation */}
-          <Section icon={<Trash2 size={18} color="#ef4444" />} title="Conversation">
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <div>
-                <p style={{ color: "#e2e8f0", fontSize: "0.875rem", fontWeight: 500 }}>
-                  Clear Chat History
-                </p>
-                <p style={{ color: "#64748b", fontSize: "0.78rem", marginTop: 2 }}>
-                  Resets the current conversation session in memory
-                </p>
-              </div>
-              <button
-                id="clear-history-btn"
-                onClick={handleClearHistory}
-                style={{
-                  padding: "0.5rem 1rem",
-                  background: cleared ? "rgba(16,185,129,0.15)" : "rgba(239,68,68,0.1)",
-                  border: `1px solid ${cleared ? "rgba(16,185,129,0.3)" : "rgba(239,68,68,0.3)"}`,
-                  borderRadius: "0.625rem",
-                  color: cleared ? "#6ee7b7" : "#fca5a5",
-                  cursor: "pointer",
-                  fontSize: "0.8rem",
-                  fontWeight: 500,
-                  transition: "all 0.2s",
-                }}
-              >
-                {cleared ? "✓ Cleared" : "Clear"}
-              </button>
-            </div>
-          </Section>
-
           {/* Connection info */}
           <Section icon={<Info size={18} color="#f59e0b" />} title="Connection Information">
             <Row label="Backend" desc="http://localhost:8000 (FastAPI)" />
-            <Row label="Text Chat" desc="Google Gemini 1.5 Flash" />
             <Row label="Voice" desc="LiveKit Cloud + Google Realtime Voice" />
             <Row label="Agent Instruction" desc="Loaded from prompt.py (single source of truth)" />
           </Section>

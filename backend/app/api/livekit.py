@@ -6,7 +6,7 @@ The API secret never leaves the server.
 import logging
 import uuid
 from fastapi import APIRouter, HTTPException, Request
-from app.schemas.chat import TokenRequest, TokenResponse
+from app.schemas.voice import TokenRequest, TokenResponse
 from app.services.livekit_service import LiveKitService
 from app.config import get_settings
 
@@ -37,6 +37,7 @@ async def get_livekit_token(body: TokenRequest, request: Request) -> TokenRespon
         token = svc.create_token(
             room_name=body.room_name,
             participant_identity=body.participant_identity,
+            agent_name=settings.LIVEKIT_AGENT_NAME,
         )
         return TokenResponse(
             token=token,

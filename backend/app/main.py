@@ -9,8 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.config import get_settings
-from app.api import health, chat, livekit
-from app.services.assistant_service import AssistantService
+from app.api import health, livekit
 from app.services.livekit_service import LiveKitService
 
 logging.basicConfig(
@@ -24,18 +23,6 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     """Initialize shared services on startup; clean up on shutdown."""
     settings = get_settings()
-
-    # -- Assistant (Gemini text chat) --
-    if settings.GOOGLE_API_KEY:
-        try:
-            app.state.assistant_service = AssistantService(api_key=settings.GOOGLE_API_KEY)
-            logger.info("AssistantService (Gemini) initialized.")
-        except Exception as exc:
-            logger.error("Failed to init AssistantService: %s", exc)
-            app.state.assistant_service = None
-    else:
-        logger.warning("GOOGLE_API_KEY not set — text chat disabled.")
-        app.state.assistant_service = None
 
     # -- LiveKit (voice token issuer) --
     app.state.livekit_service = LiveKitService(
@@ -55,7 +42,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="JARVIS AI Assistant API",
-    description="Backend for the JARVIS AI Voice & Chat Assistant",
+    description="Backend for the JARVIS LiveKit voice assistant",
     version="1.0.0",
     lifespan=lifespan,
 )
@@ -72,7 +59,6 @@ app.add_middleware(
 
 # ── Routers ──────────────────────────────────────────────────────────────────
 app.include_router(health.router, prefix="/api")
-app.include_router(chat.router, prefix="/api")
 app.include_router(livekit.router, prefix="/api")
 
 

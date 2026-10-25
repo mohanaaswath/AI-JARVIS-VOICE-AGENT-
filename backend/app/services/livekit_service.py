@@ -19,7 +19,12 @@ def _is_real_credential(value: str) -> bool:
 
 # ── Try livekit.api (official SDK) ───────────────────────────────────────────
 try:
-    from livekit.api import AccessToken, VideoGrants
+    from livekit.api import (
+        AccessToken,
+        RoomAgentDispatch,
+        RoomConfiguration,
+        VideoGrants,
+    )
     _LIVEKIT_SDK = "livekit-api"
     logger.info("Using livekit.api SDK for token generation.")
 except ImportError:
@@ -68,6 +73,7 @@ class LiveKitService:
         self,
         room_name: str,
         participant_identity: str,
+        agent_name: str = "my-agent",
         ttl_seconds: int = 3600,
     ) -> str:
         """
@@ -85,18 +91,19 @@ class LiveKitService:
                 .with_identity(participant_identity)
                 .with_name(participant_identity)
                 .with_grants(VideoGrants(room_join=True, room=room_name))
+                .with_room_config(
+                    RoomConfiguration(
+                        agents=[RoomAgentDispatch(agent_name=agent_name)]
+                    )
+                )
                 .with_ttl(timedelta(seconds=ttl_seconds))
                 .to_jwt()
             )
             return token
 
         if _LIVEKIT_SDK == "pyjwt":
-            return _make_token_pyjwt(
-                self.api_key,
-                self.api_secret,
-                room_name,
-                participant_identity,
-                ttl_seconds,
+            raise RuntimeError(
+                "The livekit-api package is required to add the voice agent to access tokens."
             )
 
         raise RuntimeError(
@@ -110,5 +117,5 @@ class LiveKitService:
         return bool(
             _is_real_credential(self.api_key)
             and _is_real_credential(self.api_secret)
-            and _LIVEKIT_SDK is not None
+            and _LIVEKIT_SDK == "livekit-api"
         )
