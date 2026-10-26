@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Sidebar from "./components/Sidebar";
 import Dashboard from "./components/Dashboard";
 import VoiceView from "./components/VoiceView";
@@ -7,9 +7,17 @@ import type { AppView } from "./types";
 
 export default function App() {
   const [view, setView] = useState<AppView>("voice");
+  const [theme, setTheme] = useState<"light" | "dark">(
+    () => (localStorage.getItem("jarvis-theme") as "light" | "dark") || "dark"
+  );
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
     () => window.innerWidth <= 640
   );
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    localStorage.setItem("jarvis-theme", theme);
+  }, [theme]);
 
   const renderView = () => {
     switch (view) {
@@ -18,7 +26,7 @@ export default function App() {
       case "voice":
         return <VoiceView />;
       case "settings":
-        return <SettingsView />;
+        return <SettingsView theme={theme} onThemeChange={setTheme} />;
       default:
         return <Dashboard onNavigate={setView} />;
     }
@@ -41,14 +49,14 @@ export default function App() {
       />
 
       <main
+        className="app-main"
         style={{
           flex: 1,
           minWidth: 0,
           overflow: "auto",
           display: "flex",
           flexDirection: "column",
-          background:
-            "radial-gradient(ellipse at top left, rgba(139,92,246,0.04) 0%, transparent 60%), var(--bg-primary)",
+          background: "var(--bg-primary)",
         }}
       >
         {renderView()}

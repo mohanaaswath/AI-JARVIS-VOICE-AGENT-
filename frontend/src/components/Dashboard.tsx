@@ -49,13 +49,15 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   ];
 
   return (
-    <div style={{ padding: "2rem", maxWidth: 900, margin: "0 auto" }}>
+    <div className="dashboard-page" style={{ padding: "clamp(1.25rem, 4vw, 3rem)", maxWidth: 1080, margin: "0 auto", width: "100%" }}>
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -12 }}
         animate={{ opacity: 1, y: 0 }}
+        className="dashboard-hero"
         style={{ marginBottom: "2rem" }}
       >
+        <div className="eyebrow"><span className="eyebrow-dot" /> COMMAND CENTER</div>
         <h1
           style={{
             fontSize: "1.75rem",
@@ -65,10 +67,10 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
             WebkitTextFillColor: "transparent",
           }}
         >
-          Dashboard
+          Good to see you, <span className="gradient-text">Operator.</span>
         </h1>
         <p style={{ color: "#64748b", marginTop: "0.25rem" }}>
-          Welcome back. Here's your JARVIS status overview.
+          Your intelligent workspace is online and ready for your next command.
         </p>
       </motion.div>
 
@@ -77,12 +79,12 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="glass"
+        className="glass status-card"
         style={{ padding: "1.25rem", marginBottom: "1.5rem" }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1rem" }}>
           <Activity size={18} color="#8b5cf6" />
-          <span style={{ fontWeight: 600, color: "#f1f5f9" }}>System Status</span>
+          <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>System Status</span>
           {!loading && (
             <span
               style={{
@@ -121,7 +123,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
       </motion.div>
 
       {/* Quick action cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px,1fr))", gap: "1rem" }}>
+      <div className="dashboard-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px,1fr))", gap: "1rem" }}>
         {cards.map((card, i) => (
           <motion.button
             key={card.id}
@@ -163,7 +165,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
             >
               {card.icon}
             </div>
-            <h3 style={{ fontWeight: 700, color: "#f1f5f9", marginBottom: "0.25rem" }}>{card.title}</h3>
+            <h3 style={{ fontWeight: 700, color: "var(--text-primary)", marginBottom: "0.25rem" }}>{card.title}</h3>
             <p style={{ color: "#64748b", fontSize: "0.8rem" }}>{card.desc}</p>
             {!card.available && !loading && (
               <p style={{ color: "#f59e0b", fontSize: "0.75rem", marginTop: "0.5rem" }}>
@@ -191,7 +193,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
         }}
       >
         <strong style={{ color: "#a78bfa" }}>💡 Voice setup:</strong> Start your LiveKit agent with{" "}
-        <code style={{ color: "#8b5cf6" }}>python agent.py start</code>.
+        <code style={{ color: "#8b5cf6" }}>venv\Scripts\python.exe -m agent start</code>.
       </motion.div>
     </div>
   );

@@ -114,6 +114,7 @@ export default function VoiceView() {
 
   return (
     <div
+      className="voice-page"
       style={{
         display: "flex",
         flexDirection: "column",
@@ -126,11 +127,12 @@ export default function VoiceView() {
     >
       {/* Status header */}
       <div style={{ textAlign: "center" }}>
-        <h1 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#f1f5f9", marginBottom: "0.5rem" }}>
-          Voice Assistant
+        <div className="eyebrow"><span className="eyebrow-dot" /> LIVE AUDIO LINK</div>
+        <h1 className="voice-title" style={{ fontSize: "clamp(1.5rem, 3vw, 2.25rem)", fontWeight: 800, color: "var(--text-primary)", marginBottom: "0.5rem" }}>
+          Speak with <span className="gradient-text">JARVIS</span>
         </h1>
         <p style={{ color: "#64748b", fontSize: "0.875rem" }}>
-          Powered by LiveKit Agents + Google Realtime Voice
+          Real-time intelligence, tuned to your voice.
         </p>
       </div>
 
@@ -373,7 +375,7 @@ export default function VoiceView() {
       </div>
 
       <p style={{ color: "#334155", fontSize: "0.75rem", textAlign: "center", maxWidth: 360 }}>
-        Voice requires the LiveKit agent server (<code style={{ color: "#8b5cf6" }}>python agent.py start</code>) to be running separately.
+        Voice requires the LiveKit agent server (<code style={{ color: "#8b5cf6" }}>venv\Scripts\python.exe -m agent start</code>) to be running separately.
         The web frontend connects via a secure token — your API keys stay on the server.
       </p>
     </div>

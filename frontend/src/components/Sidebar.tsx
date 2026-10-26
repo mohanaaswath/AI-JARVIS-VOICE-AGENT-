@@ -34,8 +34,8 @@ export default function Sidebar({
       animate={{ width: collapsed ? 64 : 240 }}
       transition={{ duration: 0.25, ease: "easeInOut" }}
       style={{
-        background: "rgba(13,17,23,0.95)",
-        borderRight: "1px solid rgba(139,92,246,0.15)",
+        background: "var(--sidebar-bg)",
+        borderRight: "1px solid var(--border)",
         display: "flex",
         flexDirection: "column",
         overflow: "visible",
@@ -83,7 +83,7 @@ export default function Sidebar({
                 whiteSpace: "nowrap",
               }}
             >
-              JARVIS AI
+              JARVIS<span style={{ color: "var(--accent-cyan)" }}>//</span>AI
             </motion.span>
           )}
         </AnimatePresence>
@@ -104,13 +104,13 @@ export default function Sidebar({
                 gap: "0.75rem",
                 padding: collapsed ? "0.75rem" : "0.75rem 0.875rem",
                 justifyContent: collapsed ? "center" : "flex-start",
-                background: active ? "rgba(139,92,246,0.15)" : "transparent",
+                background: active ? "var(--nav-active)" : "transparent",
                 borderLeft: active ? "2px solid #8b5cf6" : "2px solid transparent",
                 borderTop: "none",
                 borderRight: "none",
                 borderBottom: "none",
                 borderRadius: "0 0.5rem 0.5rem 0",
-                color: active ? "#f1f5f9" : "#64748b",
+                color: active ? "var(--text-primary)" : "var(--text-secondary)",
                 cursor: "pointer",
                 fontSize: "0.875rem",
                 fontWeight: active ? 600 : 400,
@@ -119,11 +119,11 @@ export default function Sidebar({
               }}
               onMouseEnter={(e) => {
                 if (!active)
-                  (e.currentTarget as HTMLButtonElement).style.color = "#94a3b8";
+                  (e.currentTarget as HTMLButtonElement).style.color = "var(--text-primary)";
               }}
               onMouseLeave={(e) => {
                 if (!active)
-                  (e.currentTarget as HTMLButtonElement).style.color = "#64748b";
+                  (e.currentTarget as HTMLButtonElement).style.color = "var(--text-secondary)";
               }}
               title={collapsed ? item.label : undefined}
             >
@@ -155,8 +155,8 @@ export default function Sidebar({
           width: 24,
           height: 24,
           borderRadius: "50%",
-          background: "#1e293b",
-          border: "1px solid rgba(139,92,246,0.3)",
+          background: "var(--bg-surface)",
+          border: "1px solid var(--border)",
           color: "#8b5cf6",
           cursor: "pointer",
           display: "flex",
