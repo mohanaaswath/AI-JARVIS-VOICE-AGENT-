@@ -164,3 +164,9 @@ npm run lint
   `8000`; Vite proxies `/api` to that port.
 - **Microphone access fails:** allow microphone permission for the browser and
   use a secure/localhost origin.
+
+
+1.JARVIS AI Voice Agent is a full-stack personal assistant built with React, Vite, FastAPI, LiveKit, and Google Realtime Voice.
+2.The frontend provides a modern command-center interface with voice controls, dashboard monitoring, settings, and light/dark themes.
+3.The FastAPI backend manages health checks, LiveKit configuration, secure token generation, and API communication.
+4.The LiveKit agent enables real-time voice conversations with Google Realtime Voice and noise cancellation.
