@@ -10,14 +10,15 @@ export default function SettingsView({ theme, onThemeChange }: SettingsViewProps
   return (
     <div style={{ padding: "2rem", maxWidth: 640, margin: "0 auto" }}>
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-        <h1 style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--text-primary)", marginBottom: "0.25rem" }}>
+        <div className="eyebrow"><span className="eyebrow-dot" /> CONTROL DECK</div>
+        <h1 style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)", fontWeight: 800, letterSpacing: "-.06em", color: "var(--text-primary)", marginTop: ".8rem", marginBottom: "0.5rem" }}>
           Settings
         </h1>
         <p style={{ color: "var(--text-secondary)", marginBottom: "2rem", fontSize: "0.875rem" }}>
           Configure your JARVIS experience
         </p>
 
-        <Section icon={theme === "dark" ? <Moon size={18} color="#8b5cf6" /> : <Sun size={18} color="#f59e0b" />} title="Theme">
+        <Section icon={theme === "dark" ? <Moon size={18} color="var(--accent-lime)" /> : <Sun size={18} color="var(--accent-lime)" />} title="Interface theme">
           <div className="theme-options" role="group" aria-label="Theme">
             {(["light", "dark"] as const).map((option) => (
               <button

@@ -31,8 +31,8 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   }, []);
 
   const STATUS_COLOR = {
-    ok: "#10b981",
-    degraded: "#f59e0b",
+    ok: "var(--accent-lime)",
+    degraded: "var(--accent-coral)",
     unknown: "#64748b",
   };
 
@@ -42,7 +42,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
       title: "Voice Assistant",
       desc: "Real-time voice via LiveKit Agents",
       icon: <Mic size={22} />,
-      color: "#06b6d4",
+      color: "var(--accent-lime)",
       view: "voice" as AppView,
       available: health.livekit,
     },
@@ -62,7 +62,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
           style={{
             fontSize: "1.75rem",
             fontWeight: 800,
-            background: "linear-gradient(135deg,#8b5cf6,#06b6d4)",
+            background: "linear-gradient(120deg,var(--accent-lime),var(--accent-purple))",
             WebkitBackgroundClip: "text",
             WebkitTextFillColor: "transparent",
           }}
@@ -83,7 +83,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
         style={{ padding: "1.25rem", marginBottom: "1.5rem" }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1rem" }}>
-          <Activity size={18} color="#8b5cf6" />
+          <Activity size={18} color="var(--accent-lime)" />
           <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>System Status</span>
           {!loading && (
             <span
@@ -110,11 +110,11 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
               {loading ? (
                 <Clock size={16} color="#64748b" />
               ) : ok ? (
-                <CheckCircle size={16} color="#10b981" />
+                <CheckCircle size={16} color="var(--accent-lime)" />
               ) : (
-                <XCircle size={16} color="#ef4444" />
+                <XCircle size={16} color="var(--accent-coral)" />
               )}
-              <span style={{ color: loading ? "#64748b" : ok ? "#a7f3d0" : "#fca5a5", fontSize: "0.875rem" }}>
+              <span style={{ color: loading ? "var(--text-secondary)" : ok ? "var(--accent-lime)" : "var(--accent-coral)", fontSize: "0.875rem" }}>
                 {label}
               </span>
             </div>
@@ -169,32 +169,13 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
             <p style={{ color: "#64748b", fontSize: "0.8rem" }}>{card.desc}</p>
             {!card.available && !loading && (
               <p style={{ color: "#f59e0b", fontSize: "0.75rem", marginTop: "0.5rem" }}>
-                ⚠ Requires API key configuration
+                ⚠ Voice service unavailable
               </p>
             )}
           </motion.button>
         ))}
       </div>
 
-      {/* Info box */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.4 }}
-        style={{
-          marginTop: "2rem",
-          padding: "1rem",
-          background: "rgba(139,92,246,0.06)",
-          border: "1px solid rgba(139,92,246,0.15)",
-          borderRadius: "0.75rem",
-          color: "#64748b",
-          fontSize: "0.8rem",
-          lineHeight: 1.7,
-        }}
-      >
-        <strong style={{ color: "#a78bfa" }}>💡 Voice setup:</strong> Start your LiveKit agent with{" "}
-        <code style={{ color: "#8b5cf6" }}>venv\Scripts\python.exe -m agent start</code>.
-      </motion.div>
     </div>
   );
 }

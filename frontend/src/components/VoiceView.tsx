@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mic, MicOff, PhoneOff, Phone, Wifi, AlertCircle } from "lucide-react";
+import { PhoneOff, Phone, AlertCircle } from "lucide-react";
 import { Room, RoomEvent, Track } from "livekit-client";
 import { fetchLiveKitToken, fetchLiveKitStatus } from "../lib/api";
 
@@ -10,7 +10,6 @@ export default function VoiceView() {
   const [voiceState, setVoiceState] = useState<VoiceState>("idle");
   const [error, setError] = useState<string | null>(null);
   const [lkConfigured, setLkConfigured] = useState<boolean | null>(null);
-  const [lkUrl, setLkUrl] = useState<string | null>(null);
   const [statusMsg, setStatusMsg] = useState("Ready to connect");
   const roomRef = useRef<Room | null>(null);
 
@@ -18,7 +17,6 @@ export default function VoiceView() {
     fetchLiveKitStatus()
       .then((s) => {
         setLkConfigured(s.configured);
-        setLkUrl(s.url);
       })
       .catch(() => setLkConfigured(false));
   }, []);
@@ -86,7 +84,7 @@ export default function VoiceView() {
       if (msg.includes("Permission denied") || msg.includes("NotAllowedError")) {
         setError("Microphone access denied. Please allow microphone permission and try again.");
       } else {
-        setError(msg);
+        setError("Unable to start the voice session. Please try again.");
       }
       setVoiceState("error");
       setStatusMsg("Connection failed");
@@ -102,12 +100,12 @@ export default function VoiceView() {
   };
 
   const STATE_COLORS: Record<VoiceState, string> = {
-    idle: "#64748b",
-    connecting: "#f59e0b",
-    connected: "#10b981",
-    listening: "#3b82f6",
-    speaking: "#8b5cf6",
-    error: "#ef4444",
+    idle: "#818797",
+    connecting: "#ff8066",
+    connected: "#c7f36b",
+    listening: "#c7f36b",
+    speaking: "#a78bfa",
+    error: "#ff8066",
   };
 
   const color = STATE_COLORS[voiceState];
@@ -136,44 +134,23 @@ export default function VoiceView() {
         </p>
       </div>
 
-      {/* LiveKit config warning */}
+      {/* Configuration problems are surfaced when a session is started. */}
       {lkConfigured === false && (
         <div
           style={{
-            padding: "1rem",
+            padding: "0.5rem 1rem",
             background: "rgba(245,158,11,0.1)",
             border: "1px solid rgba(245,158,11,0.3)",
-            borderRadius: "0.75rem",
-            color: "#fcd34d",
-            fontSize: "0.85rem",
-            maxWidth: 420,
-            textAlign: "center",
-            display: "flex",
-            alignItems: "center",
-            gap: "0.5rem",
-          }}
-        >
-          <AlertCircle size={16} />
-          LiveKit credentials not configured. Set LIVEKIT_API_KEY, LIVEKIT_API_SECRET, and LIVEKIT_URL in your .env file.
-        </div>
-      )}
-
-      {lkConfigured === true && (
-        <div
-          style={{
-            padding: "0.5rem 1rem",
-            background: "rgba(16,185,129,0.1)",
-            border: "1px solid rgba(16,185,129,0.2)",
             borderRadius: "0.5rem",
-            color: "#6ee7b7",
+            color: "var(--accent-coral)",
             fontSize: "0.8rem",
             display: "flex",
             alignItems: "center",
             gap: "0.5rem",
           }}
         >
-          <Wifi size={14} />
-          LiveKit configured: {lkUrl}
+          <AlertCircle size={14} />
+          Voice service is temporarily unavailable.
         </div>
       )}
 
@@ -203,7 +180,7 @@ export default function VoiceView() {
           </>
         )}
 
-        {/* Central orb */}
+        {/* Assistant avatar */}
         <motion.div
           animate={{
             scale: voiceState === "speaking" ? [1, 1.05, 1] : 1,
@@ -217,53 +194,35 @@ export default function VoiceView() {
             width: 140,
             height: 140,
             borderRadius: "50%",
-            background: `radial-gradient(circle at 35% 35%, ${color}44, ${color}22)`,
             border: `2px solid ${color}66`,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
+            overflow: "hidden",
             position: "relative",
             zIndex: 1,
+            background: "#0f172a",
           }}
         >
-          {voiceState === "connecting" ? (
+          <img
+            src="/Jarvis%20image.jpg"
+            alt="JARVIS assistant"
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              display: "block",
+            }}
+          />
+          {voiceState === "connecting" && (
             <motion.div
               animate={{ rotate: 360 }}
               transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
               style={{
-                width: 48,
-                height: 48,
-                border: `3px solid ${color}33`,
-                borderTopColor: color,
+                position: "absolute",
+                inset: 44,
+                border: "3px solid rgba(255,255,255,0.3)",
+                borderTopColor: "#fff",
                 borderRadius: "50%",
               }}
             />
-          ) : voiceState === "error" ? (
-            <MicOff size={48} color={color} />
-          ) : voiceState === "idle" ? (
-            <Mic size={48} color={color} />
-          ) : (
-            /* Wave bars when connected/listening/speaking */
-            <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-              {Array.from({ length: 7 }).map((_, i) => (
-                <motion.div
-                  key={i}
-                  className="wave-bar"
-                  animate={{ height: voiceState === "speaking" ? [4, 24, 4] : [4, 14, 4] }}
-                  transition={{
-                    duration: 0.6,
-                    repeat: Infinity,
-                    delay: i * 0.08,
-                    ease: "easeInOut",
-                  }}
-                  style={{
-                    width: 4,
-                    borderRadius: 2,
-                    background: `linear-gradient(to top, ${color}, #06b6d4)`,
-                  }}
-                />
-              ))}
-            </div>
           )}
         </motion.div>
       </div>
@@ -307,10 +266,10 @@ export default function VoiceView() {
             exit={{ opacity: 0, y: -8 }}
             style={{
               padding: "0.875rem 1rem",
-              background: "rgba(239,68,68,0.1)",
-              border: "1px solid rgba(239,68,68,0.3)",
+              background: "rgba(255,128,102,0.1)",
+              border: "1px solid rgba(255,128,102,0.3)",
               borderRadius: "0.75rem",
-              color: "#fca5a5",
+              color: "var(--accent-coral)",
               fontSize: "0.85rem",
               maxWidth: 420,
               textAlign: "center",
@@ -360,10 +319,10 @@ export default function VoiceView() {
               alignItems: "center",
               gap: "0.5rem",
               fontSize: "0.95rem",
-              background: "rgba(239,68,68,0.15)",
-              border: "1px solid rgba(239,68,68,0.4)",
+              background: "rgba(255,128,102,0.15)",
+              border: "1px solid rgba(255,128,102,0.4)",
               borderRadius: "0.75rem",
-              color: "#fca5a5",
+              color: "var(--accent-coral)",
               cursor: "pointer",
               fontWeight: 600,
             }}
@@ -374,10 +333,6 @@ export default function VoiceView() {
         )}
       </div>
 
-      <p style={{ color: "#334155", fontSize: "0.75rem", textAlign: "center", maxWidth: 360 }}>
-        Voice requires the LiveKit agent server (<code style={{ color: "#8b5cf6" }}>venv\Scripts\python.exe -m agent start</code>) to be running separately.
-        The web frontend connects via a secure token — your API keys stay on the server.
-      </p>
     </div>
   );
 }

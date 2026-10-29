@@ -109,8 +109,9 @@ Open three PowerShell windows from the repository root:
 .\venv\Scripts\python.exe -m uvicorn app.main:app --app-dir backend --port 8000
 
 # Voice agent
-.\venv\Scripts\python.exe -m agent
-# or: .\venv\Scripts\python.exe -m agent start
+Push-Location backend
+..\venv\Scripts\python.exe -m agent start
+Pop-Location
 
 # Frontend
 cd frontend

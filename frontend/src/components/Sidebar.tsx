@@ -50,7 +50,7 @@ export default function Sidebar({
           display: "flex",
           alignItems: "center",
           gap: "0.75rem",
-          borderBottom: "1px solid rgba(139,92,246,0.1)",
+          borderBottom: "1px solid var(--border)",
         }}
       >
         <div
@@ -58,7 +58,7 @@ export default function Sidebar({
             width: 36,
             height: 36,
             borderRadius: "50%",
-            background: "linear-gradient(135deg,#8b5cf6,#06b6d4)",
+            background: "linear-gradient(135deg,var(--accent-lime),var(--accent-purple))",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -77,7 +77,7 @@ export default function Sidebar({
               style={{
                 fontSize: "1.1rem",
                 fontWeight: 700,
-                background: "linear-gradient(135deg,#8b5cf6,#06b6d4)",
+                background: "linear-gradient(135deg,var(--accent-lime),var(--accent-purple))",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
                 whiteSpace: "nowrap",
@@ -105,7 +105,7 @@ export default function Sidebar({
                 padding: collapsed ? "0.75rem" : "0.75rem 0.875rem",
                 justifyContent: collapsed ? "center" : "flex-start",
                 background: active ? "var(--nav-active)" : "transparent",
-                borderLeft: active ? "2px solid #8b5cf6" : "2px solid transparent",
+                borderLeft: active ? "2px solid var(--accent-lime)" : "2px solid transparent",
                 borderTop: "none",
                 borderRight: "none",
                 borderBottom: "none",
@@ -157,7 +157,7 @@ export default function Sidebar({
           borderRadius: "50%",
           background: "var(--bg-surface)",
           border: "1px solid var(--border)",
-          color: "#8b5cf6",
+          color: "var(--accent-lime)",
           cursor: "pointer",
           display: "flex",
           alignItems: "center",
