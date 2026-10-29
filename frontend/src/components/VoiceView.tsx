@@ -102,8 +102,8 @@ export default function VoiceView() {
   const STATE_COLORS: Record<VoiceState, string> = {
     idle: "#818797",
     connecting: "#ff8066",
-    connected: "#c7f36b",
-    listening: "#c7f36b",
+    connected: "#67e8f9",
+    listening: "#67e8f9",
     speaking: "#a78bfa",
     error: "#ff8066",
   };

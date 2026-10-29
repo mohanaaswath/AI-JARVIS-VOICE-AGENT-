@@ -168,7 +168,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
             <h3 style={{ fontWeight: 700, color: "var(--text-primary)", marginBottom: "0.25rem" }}>{card.title}</h3>
             <p style={{ color: "#64748b", fontSize: "0.8rem" }}>{card.desc}</p>
             {!card.available && !loading && (
-              <p style={{ color: "#f59e0b", fontSize: "0.75rem", marginTop: "0.5rem" }}>
+              <p style={{ color: "var(--accent-coral)", fontSize: "0.75rem", marginTop: "0.5rem" }}>
                 ⚠ Voice service unavailable
               </p>
             )}
