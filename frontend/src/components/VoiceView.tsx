@@ -1,17 +1,27 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { PhoneOff, Phone, AlertCircle } from "lucide-react";
+import { PhoneOff, Phone, AlertCircle, Wrench, CheckCircle2, XCircle } from "lucide-react";
 import { Room, RoomEvent, Track } from "livekit-client";
-import { fetchLiveKitToken, fetchLiveKitStatus } from "../lib/api";
+import { fetchLiveKitToken, fetchLiveKitStatus, fetchActivity } from "../lib/api";
+import type { ActionResult } from "../types";
 
-type VoiceState = "idle" | "connecting" | "connected" | "listening" | "speaking" | "error";
+type VoiceState =
+  | "idle"
+  | "connecting"
+  | "connected"
+  | "listening"
+  | "executing"
+  | "speaking"
+  | "error";
 
 export default function VoiceView() {
   const [voiceState, setVoiceState] = useState<VoiceState>("idle");
   const [error, setError] = useState<string | null>(null);
   const [lkConfigured, setLkConfigured] = useState<boolean | null>(null);
   const [statusMsg, setStatusMsg] = useState("Ready to connect");
+  const [recentAction, setRecentAction] = useState<ActionResult | null>(null);
   const roomRef = useRef<Room | null>(null);
+  const lastActionIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     fetchLiveKitStatus()
@@ -26,6 +36,39 @@ export default function VoiceView() {
       roomRef.current?.disconnect();
     };
   }, []);
+
+  // Poll recent activity while connected to show real-time tool execution
+  useEffect(() => {
+    if (voiceState === "idle" || voiceState === "error") return;
+
+    const interval = setInterval(async () => {
+      try {
+        const acts = await fetchActivity(1);
+        if (acts.length > 0) {
+          const latest = acts[0];
+          if (latest.action_id !== lastActionIdRef.current) {
+            lastActionIdRef.current = latest.action_id;
+            setRecentAction(latest);
+            // Flash executing state briefly if active
+            if (voiceState === "listening") {
+              setVoiceState("executing");
+              setStatusMsg(`Executed ${latest.action_name}`);
+              setTimeout(() => {
+                if (roomRef.current) {
+                  setVoiceState("listening");
+                  setStatusMsg("Listening…");
+                }
+              }, 2500);
+            }
+          }
+        }
+      } catch {
+        // Ignore activity fetch errors during call
+      }
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [voiceState]);
 
   const startSession = async () => {
     setError(null);
@@ -50,6 +93,7 @@ export default function VoiceView() {
           setStatusMsg("Assistant is speaking");
         }
       });
+
       room.on(RoomEvent.TrackUnsubscribed, (track) => {
         track.detach().forEach((element) => element.remove());
         if (isConnected) {
@@ -57,6 +101,7 @@ export default function VoiceView() {
           setStatusMsg("Listening…");
         }
       });
+
       room.on(RoomEvent.ActiveSpeakersChanged, (speakers) => {
         if (speakers.some((speaker) => speaker.identity !== identity)) {
           setVoiceState("speaking");
@@ -66,6 +111,7 @@ export default function VoiceView() {
           setStatusMsg("Listening…");
         }
       });
+
       room.on(RoomEvent.Disconnected, () => {
         roomRef.current = null;
         setVoiceState("idle");
@@ -82,9 +128,9 @@ export default function VoiceView() {
       roomRef.current = null;
       const msg = err instanceof Error ? err.message : "Connection failed";
       if (msg.includes("Permission denied") || msg.includes("NotAllowedError")) {
-        setError("Microphone access denied. Please allow microphone permission and try again.");
+        setError("Microphone access denied. Please allow microphone permission in your browser and try again.");
       } else {
-        setError("Unable to start the voice session. Please try again.");
+        setError("Unable to start the voice session. Ensure the backend API and LiveKit Cloud credentials are valid.");
       }
       setVoiceState("error");
       setStatusMsg("Connection failed");
@@ -104,6 +150,7 @@ export default function VoiceView() {
     connecting: "#ff8066",
     connected: "#67e8f9",
     listening: "#67e8f9",
+    executing: "var(--accent-lime)",
     speaking: "#a78bfa",
     error: "#ff8066",
   };
@@ -120,21 +167,32 @@ export default function VoiceView() {
         alignItems: "center",
         justifyContent: "center",
         padding: "2rem",
-        gap: "2rem",
+        gap: "1.5rem",
+        maxWidth: 720,
+        margin: "0 auto",
       }}
     >
       {/* Status header */}
       <div style={{ textAlign: "center" }}>
-        <div className="eyebrow"><span className="eyebrow-dot" /> LIVE AUDIO LINK</div>
-        <h1 className="voice-title" style={{ fontSize: "clamp(1.5rem, 3vw, 2.25rem)", fontWeight: 800, color: "var(--text-primary)", marginBottom: "0.5rem" }}>
+        <div className="eyebrow">
+          <span className="eyebrow-dot" /> LIVE WINDOWS VOICE LINK
+        </div>
+        <h1
+          className="voice-title"
+          style={{
+            fontSize: "clamp(1.5rem, 3vw, 2.25rem)",
+            fontWeight: 800,
+            color: "var(--text-primary)",
+            marginBottom: "0.5rem",
+          }}
+        >
           Speak with <span className="gradient-text">JARVIS</span>
         </h1>
         <p style={{ color: "#64748b", fontSize: "0.875rem" }}>
-          Real-time intelligence, tuned to your voice.
+          Full Windows desktop voice control. Natural speech, tool execution, and verified results.
         </p>
       </div>
 
-      {/* Configuration problems are surfaced when a session is started. */}
       {lkConfigured === false && (
         <div
           style={{
@@ -150,14 +208,16 @@ export default function VoiceView() {
           }}
         >
           <AlertCircle size={14} />
-          Voice service is temporarily unavailable.
+          Voice credentials incomplete. Ensure LIVEKIT_URL, LIVEKIT_API_KEY, and GOOGLE_API_KEY are configured in frontend/.env.
         </div>
       )}
 
       {/* Main orb */}
       <div style={{ position: "relative" }}>
-        {/* Pulse rings */}
-        {(voiceState === "connected" || voiceState === "listening" || voiceState === "speaking") && (
+        {(voiceState === "connected" ||
+          voiceState === "listening" ||
+          voiceState === "executing" ||
+          voiceState === "speaking") && (
           <>
             {[1, 2, 3].map((i) => (
               <motion.div
@@ -251,11 +311,48 @@ export default function VoiceView() {
             }}
           />
           <span style={{ color, fontSize: "0.85rem", fontWeight: 500 }}>
-            {voiceState.charAt(0).toUpperCase() + voiceState.slice(1)}
+            {voiceState === "executing"
+              ? "Executing Windows Tool"
+              : voiceState.charAt(0).toUpperCase() + voiceState.slice(1)}
           </span>
         </div>
         <p style={{ color: "#64748b", fontSize: "0.85rem" }}>{statusMsg}</p>
       </div>
+
+      {/* Live Tool Execution Feedback Badge */}
+      <AnimatePresence>
+        {recentAction && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            className="glass"
+            style={{
+              padding: "0.6rem 1rem",
+              borderRadius: "0.5rem",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              border: "1px solid var(--border)",
+              fontSize: "0.8rem",
+              maxWidth: 480,
+            }}
+          >
+            <Wrench size={14} color="var(--accent-lime)" />
+            <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>
+              {recentAction.action_name}:
+            </span>
+            <span style={{ color: "#94a3b8", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {recentAction.message}
+            </span>
+            {recentAction.verification_status === "verified" ? (
+              <CheckCircle2 size={14} color="var(--accent-lime)" />
+            ) : (
+              <XCircle size={14} color="var(--accent-coral)" />
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Error message */}
       <AnimatePresence>
@@ -271,7 +368,7 @@ export default function VoiceView() {
               borderRadius: "0.75rem",
               color: "var(--accent-coral)",
               fontSize: "0.85rem",
-              maxWidth: 420,
+              maxWidth: 480,
               textAlign: "center",
               display: "flex",
               alignItems: "center",
@@ -332,7 +429,6 @@ export default function VoiceView() {
           </motion.button>
         )}
       </div>
-
     </div>
   );
 }

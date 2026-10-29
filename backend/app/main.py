@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.config import get_settings
-from app.api import health, livekit
+from app.api import health, livekit, system, activity, approvals
 from app.services.livekit_service import LiveKitService
 
 logging.basicConfig(
@@ -42,8 +42,8 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="JARVIS AI Assistant API",
-    description="Backend for the JARVIS LiveKit voice assistant",
-    version="1.0.0",
+    description="Backend for the JARVIS LiveKit voice assistant and Windows automation control",
+    version="2.0.0",
     lifespan=lifespan,
 )
 
@@ -60,6 +60,9 @@ app.add_middleware(
 # ── Routers ──────────────────────────────────────────────────────────────────
 app.include_router(health.router, prefix="/api")
 app.include_router(livekit.router, prefix="/api")
+app.include_router(system.router, prefix="/api")
+app.include_router(activity.router, prefix="/api")
+app.include_router(approvals.router, prefix="/api")
 
 
 # ── Global exception handler ─────────────────────────────────────────────────
@@ -74,4 +77,8 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 @app.get("/", tags=["Root"])
 async def root():
-    return {"message": "JARVIS AI Assistant backend is running.", "docs": "/docs"}
+    return {
+        "message": "JARVIS Windows Desktop Voice Assistant backend is running.",
+        "version": "2.0.0",
+        "docs": "/docs",
+    }
