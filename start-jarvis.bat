@@ -24,4 +24,4 @@ echo.
 echo [JARVIS] All services launched. Open http://localhost:5173 in your browser.
 echo [JARVIS] (The dashboard should show status OK / LiveKit connected.)
 echo.
-pause
+if /i not "%~1"=="--no-pause" pause
