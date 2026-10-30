@@ -13,6 +13,7 @@ import {
   Volume2,
   VolumeX,
   Wifi,
+  Bot,
   Moon,
   Sun,
   ShieldAlert,
@@ -23,6 +24,7 @@ import {
 } from "lucide-react";
 import {
   fetchHealth,
+  fetchAgentStatus,
   fetchSystemStatus,
   fetchActivity,
   fetchPendingApprovals,
@@ -36,6 +38,7 @@ import type {
   SystemStatus,
   ActionResult,
   ApprovalRequest,
+  AgentStatus,
 } from "../types";
 
 interface DashboardProps {
@@ -47,6 +50,10 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
     status: "unknown",
     livekit: false,
   });
+  const [agent, setAgent] = useState<AgentStatus>({
+    available: false,
+    state: "unknown",
+  });
   const [system, setSystem] = useState<SystemStatus | null>(null);
   const [activities, setActivities] = useState<ActionResult[]>([]);
   const [approvals, setApprovals] = useState<ApprovalRequest[]>([]);
@@ -56,8 +63,9 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
 
   const loadData = useCallback(async () => {
     try {
-      const [h, s, act, appr] = await Promise.allSettled([
+      const [h, agentResult, systemResult, activityResult, approvalResult] = await Promise.allSettled([
         fetchHealth(),
+        fetchAgentStatus(),
         fetchSystemStatus(),
         fetchActivity(10),
         fetchPendingApprovals(),
@@ -69,16 +77,22 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
         setHealth({ status: "degraded", livekit: false });
       }
 
-      if (s.status === "fulfilled") {
-        setSystem(s.value);
+      if (agentResult.status === "fulfilled") {
+        setAgent(agentResult.value);
+      } else {
+        setAgent({ available: false, state: "unknown", reason: "status_unavailable" });
       }
 
-      if (act.status === "fulfilled") {
-        setActivities(act.value);
+      if (systemResult.status === "fulfilled") {
+        setSystem(systemResult.value);
       }
 
-      if (appr.status === "fulfilled") {
-        setApprovals(appr.value);
+      if (activityResult.status === "fulfilled") {
+        setActivities(activityResult.value);
+      }
+
+      if (approvalResult.status === "fulfilled") {
+        setApprovals(approvalResult.value);
       }
     } finally {
       setLoading(false);
@@ -319,6 +333,27 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
           gap: "1rem",
         }}
       >
+        {/* Local Background Agent Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="glass"
+          style={{ padding: "1.25rem", borderRadius: "0.75rem" }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem" }}>
+            <Bot size={18} color={agent.available ? "var(--accent-lime)" : "var(--accent-coral)"} />
+            <span style={{ fontSize: "0.85rem", color: "#64748b", fontWeight: 500 }}>Background Agent</span>
+          </div>
+          <div style={{ fontSize: "1.3rem", fontWeight: 700, color: "var(--text-primary)" }}>
+            {loading ? "Checking..." : agent.available ? "Online" : "Offline"}
+          </div>
+          <p style={{ fontSize: "0.75rem", color: agent.available ? "var(--accent-lime)" : "var(--accent-coral)", marginTop: "0.25rem" }}>
+            {agent.available
+              ? `Worker ${agent.agent_name ?? "my-agent"} is running`
+              : "Start the Windows voice worker to enable commands"}
+          </p>
+        </motion.div>
+
         {/* LiveKit Voice Card */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}

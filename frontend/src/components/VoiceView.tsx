@@ -72,6 +72,7 @@ export default function VoiceView() {
 
   const startSession = async () => {
     setError(null);
+    lastActionIdRef.current = null;
     setVoiceState("connecting");
     setStatusMsg("Connecting to voice agent…");
 
@@ -89,6 +90,12 @@ export default function VoiceView() {
           audioElement.autoplay = true;
           audioElement.style.display = "none";
           document.body.appendChild(audioElement);
+          audioElement.play().catch((playError: unknown) => {
+            const message = playError instanceof Error ? playError.message : "Audio playback was blocked";
+            setError(`Assistant audio could not play: ${message}`);
+            setVoiceState("error");
+            setStatusMsg("Audio playback failed");
+          });
           setVoiceState("speaking");
           setStatusMsg("Assistant is speaking");
         }
@@ -130,7 +137,7 @@ export default function VoiceView() {
       if (msg.includes("Permission denied") || msg.includes("NotAllowedError")) {
         setError("Microphone access denied. Please allow microphone permission in your browser and try again.");
       } else {
-        setError("Unable to start the voice session. Ensure the backend API and LiveKit Cloud credentials are valid.");
+        setError(`Unable to start the voice session: ${msg}`);
       }
       setVoiceState("error");
       setStatusMsg("Connection failed");

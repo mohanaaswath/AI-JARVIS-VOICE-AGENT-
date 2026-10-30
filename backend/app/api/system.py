@@ -94,6 +94,12 @@ async def execute_action_endpoint(req: ExecuteActionRequest) -> ActionResult:
             raise HTTPException(status_code=400, detail="Missing parameter: 'file_path'")
         res = sys_svc.read_allowed_file(file_path)
 
+    elif req.action_name == "open_website":
+        website = req.parameters.get("website")
+        if not website:
+            raise HTTPException(status_code=400, detail="Missing parameter: 'website'")
+        res = sys_svc.open_website(website)
+
     else:
         raise HTTPException(
             status_code=400,

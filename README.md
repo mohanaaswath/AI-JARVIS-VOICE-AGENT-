@@ -34,6 +34,12 @@ JARVISE/
 └── .gitignore
 ```
 
+Architecture and staged implementation details are documented in
+[PROJECT_ANALYSIS.md](PROJECT_ANALYSIS.md),
+[CURRENT_ARCHITECTURE.md](CURRENT_ARCHITECTURE.md),
+[TARGET_ARCHITECTURE.md](TARGET_ARCHITECTURE.md), and
+[IMPLEMENTATION_ROADMAP.md](IMPLEMENTATION_ROADMAP.md).
+
 Generated/local directories such as `venv`, `frontend/node_modules`, and
 `frontend/dist` are not source files and are ignored by Git.
 
@@ -110,7 +116,7 @@ Open three PowerShell windows from the repository root:
 
 # Voice agent
 Push-Location backend
-..\venv\Scripts\python.exe -m agent start
+..\venv\Scripts\python.exe local_agent.py
 Pop-Location
 
 # Frontend
@@ -145,7 +151,8 @@ Token requests use:
 Run the checks from the repository root:
 
 ```powershell
-python -m compileall -q backend
+.\venv\Scripts\python.exe -m pytest -q
+.\venv\Scripts\python.exe -m compileall -q backend
 Push-Location backend
 ..\venv\Scripts\python.exe -c "from app.main import app"
 Pop-Location

@@ -12,6 +12,8 @@ import subprocess
 import time
 from typing import Any
 import uuid
+import webbrowser
+from urllib.parse import urlparse
 
 import psutil
 
@@ -69,6 +71,14 @@ class SystemService:
         "time": "ms-settings:dateandtime",
         "privacy": "ms-settings:privacy",
         "default-apps": "ms-settings:defaultapps",
+    }
+
+    WEBSITE_ALIASES: dict[str, str] = {
+        "youtube": "https://www.youtube.com",
+        "google": "https://www.google.com",
+        "github": "https://github.com",
+        "gmail": "https://mail.google.com",
+        "stackoverflow": "https://stackoverflow.com",
     }
 
     # ── Safe Application Allowlist ───────────────────────────────────────────
@@ -526,6 +536,66 @@ class SystemService:
                 verification_status=VerificationStatus.FAILED,
                 message=f"Failed to launch application '{app_name}': {exc}",
                 error_code="LAUNCH_EXCEPTION",
+            )
+
+    def open_website(self, target: str) -> ActionResult:
+        """Open a validated public HTTP(S) URL in the user's default browser."""
+        action_id = f"web-{uuid.uuid4().hex[:8]}"
+        normalized = (target or "").strip().lower()
+        url = self.WEBSITE_ALIASES.get(normalized, target.strip() if target else "")
+        parsed = urlparse(url)
+
+        if (
+            parsed.scheme not in {"http", "https"}
+            or not parsed.netloc
+            or parsed.username
+            or parsed.password
+        ):
+            return ActionResult(
+                action_id=action_id,
+                action_name="open_website",
+                risk_level=RiskLevel.LEVEL_1_READONLY,
+                status=ActionStatus.FAILED,
+                requested_value=target,
+                verification_status=VerificationStatus.FAILED,
+                message="Only valid public HTTP or HTTPS website URLs are allowed.",
+                error_code="INVALID_WEBSITE_URL",
+            )
+
+        try:
+            opened = webbrowser.open_new_tab(url)
+            if not opened:
+                return ActionResult(
+                    action_id=action_id,
+                    action_name="open_website",
+                    risk_level=RiskLevel.LEVEL_1_READONLY,
+                    status=ActionStatus.FAILED,
+                    requested_value=target,
+                    verification_status=VerificationStatus.UNVERIFIED,
+                    message=f"The browser could not open '{url}'.",
+                    error_code="BROWSER_OPEN_FAILED",
+                )
+            return ActionResult(
+                action_id=action_id,
+                action_name="open_website",
+                risk_level=RiskLevel.LEVEL_1_READONLY,
+                status=ActionStatus.SUCCESS,
+                requested_value=target,
+                observed_value=url,
+                verification_status=VerificationStatus.UNVERIFIED,
+                message=f"Opened {url} in the default browser.",
+                parameters={"url": url},
+            )
+        except OSError as exc:
+            return ActionResult(
+                action_id=action_id,
+                action_name="open_website",
+                risk_level=RiskLevel.LEVEL_1_READONLY,
+                status=ActionStatus.FAILED,
+                requested_value=target,
+                verification_status=VerificationStatus.FAILED,
+                message=f"Failed to open '{url}': {exc}",
+                error_code="BROWSER_OPEN_ERROR",
             )
 
     # ── Permitted File and Folder Operations ──────────────────────────────────

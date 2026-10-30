@@ -4,6 +4,7 @@ tools package — Exports all function tools registered on the JARVIS assistant.
 from tools.audio_tools import get_audio_status, set_master_volume
 from tools.display_tools import get_display_settings, set_dark_mode
 from tools.settings_tools import open_settings_page
+from tools.browser_tools import open_website
 from tools.app_tools import open_application
 from tools.file_tools import list_allowed_files, read_allowed_file, open_allowed_folder
 from tools.system_info_tools import (
@@ -32,6 +33,7 @@ ALL_JARVIS_TOOLS = [
 
     # Windows Settings navigation
     open_settings_page,
+    open_website,
 
     # Applications
     open_application,
@@ -49,6 +51,7 @@ __all__ = [
     "get_display_settings",
     "set_dark_mode",
     "open_settings_page",
+    "open_website",
     "open_application",
     "list_allowed_files",
     "read_allowed_file",

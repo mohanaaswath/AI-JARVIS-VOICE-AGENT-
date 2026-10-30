@@ -32,6 +32,7 @@ class PermissionService:
         "set_master_volume": RiskLevel.LEVEL_2_LOW_RISK,
         "set_dark_mode": RiskLevel.LEVEL_2_LOW_RISK,
         "open_allowed_folder": RiskLevel.LEVEL_2_LOW_RISK,
+        "open_website": RiskLevel.LEVEL_1_READONLY,
 
         # Level 3: Sensitive or disruptive actions (require explicit user approval)
         "change_bluetooth_state": RiskLevel.LEVEL_3_SENSITIVE,

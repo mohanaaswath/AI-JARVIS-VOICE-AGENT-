@@ -26,6 +26,18 @@ class TestApplicationLaunching(unittest.TestCase):
         self.assertEqual(res.status, ActionStatus.FAILED)
         self.assertEqual(res.error_code, "APP_NOT_ALLOWLISTED")
 
+    def test_invalid_website_rejected(self):
+        res = self.svc.open_website("javascript:alert(1)")
+        self.assertEqual(res.status, ActionStatus.FAILED)
+        self.assertEqual(res.error_code, "INVALID_WEBSITE_URL")
+
+    @patch("app.services.system_service.webbrowser.open_new_tab")
+    def test_website_alias_opens_valid_url(self, mock_open):
+        mock_open.return_value = True
+        res = self.svc.open_website("YouTube")
+        self.assertEqual(res.status, ActionStatus.SUCCESS)
+        mock_open.assert_called_once_with("https://www.youtube.com")
+
     @patch("app.services.system_service.subprocess.Popen")
     @patch("app.services.system_service.VerificationService.verify_application_spawned")
     def test_allowed_app_launch_subprocess(self, mock_verify, mock_popen):

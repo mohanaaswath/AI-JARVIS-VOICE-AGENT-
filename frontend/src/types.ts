@@ -5,6 +5,15 @@ export interface HealthStatus {
   livekit: boolean;
 }
 
+export interface AgentStatus {
+  available: boolean;
+  state: "running" | "offline" | "unknown";
+  reason?: string;
+  age_seconds?: number;
+  agent_name?: string;
+  pid?: number;
+}
+
 export type ActionStatus =
   | "pending"
   | "approved"

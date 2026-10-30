@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.config import get_settings
-from app.api import health, livekit, system, activity, approvals
+from app.api import agent, health, livekit, system, activity, approvals
 from app.services.livekit_service import LiveKitService
 
 logging.basicConfig(
@@ -59,6 +59,7 @@ app.add_middleware(
 
 # ── Routers ──────────────────────────────────────────────────────────────────
 app.include_router(health.router, prefix="/api")
+app.include_router(agent.router, prefix="/api")
 app.include_router(livekit.router, prefix="/api")
 app.include_router(system.router, prefix="/api")
 app.include_router(activity.router, prefix="/api")

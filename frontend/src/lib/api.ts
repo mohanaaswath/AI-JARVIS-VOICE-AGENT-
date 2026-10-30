@@ -4,6 +4,7 @@ import type {
   ActionResult,
   ApprovalRequest,
   SystemStatus,
+  AgentStatus,
 } from "../types";
 
 const api = axios.create({
@@ -48,6 +49,11 @@ export async function fetchLiveKitStatus(): Promise<{
   url: string | null;
 }> {
   const { data } = await api.get("/livekit/status");
+  return data;
+}
+
+export async function fetchAgentStatus(): Promise<AgentStatus> {
+  const { data } = await api.get<AgentStatus>("/agent/status");
   return data;
 }
 
