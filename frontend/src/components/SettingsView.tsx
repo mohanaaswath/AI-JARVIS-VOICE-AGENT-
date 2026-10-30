@@ -1,5 +1,8 @@
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Moon, Sun } from "lucide-react";
+import { MicOff, Moon, Radio, Sun } from "lucide-react";
+import { fetchAgentStatus, updateAgentSettings } from "../lib/api";
+import type { AgentSettings } from "../types";
 
 interface SettingsViewProps {
   theme: "light" | "dark";
@@ -7,6 +10,25 @@ interface SettingsViewProps {
 }
 
 export default function SettingsView({ theme, onThemeChange }: SettingsViewProps) {
+  const [agentSettings, setAgentSettings] = useState<AgentSettings | null>(null);
+  const [agentError, setAgentError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchAgentStatus()
+      .then((status) => setAgentSettings(status.settings ?? null))
+      .catch(() => setAgentError("Local agent settings are unavailable."));
+  }, []);
+
+  const updateSetting = async (change: Partial<AgentSettings>) => {
+    try {
+      const result = await updateAgentSettings(change);
+      setAgentSettings(result.settings);
+      setAgentError(null);
+    } catch (error) {
+      setAgentError(error instanceof Error ? error.message : "Could not update agent settings.");
+    }
+  };
+
   return (
     <div style={{ padding: "2rem", maxWidth: 640, margin: "0 auto" }}>
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
@@ -33,6 +55,50 @@ export default function SettingsView({ theme, onThemeChange }: SettingsViewProps
               </button>
             ))}
           </div>
+        </Section>
+
+        <div style={{ height: "1rem" }} />
+        <Section icon={<Radio size={18} color="var(--accent-lime)" />} title="Background voice agent">
+          <label style={{ display: "flex", alignItems: "center", justifyContent: "space-between", color: "var(--text-primary)", fontSize: "0.9rem" }}>
+            Wake word readiness
+            <span style={{ color: "var(--text-secondary)", fontSize: "0.8rem" }}>
+              {agentSettings ? "Hey Jarvis settings available" : "Loading"}
+            </span>
+          </label>
+          <label style={{ display: "flex", alignItems: "center", justifyContent: "space-between", color: "var(--text-primary)", fontSize: "0.9rem" }}>
+            Mute microphone
+            <input
+              type="checkbox"
+              checked={agentSettings?.microphone_muted ?? false}
+              disabled={!agentSettings}
+              onChange={(event) => updateSetting({ microphone_muted: event.target.checked })}
+            />
+          </label>
+          <label style={{ display: "flex", alignItems: "center", justifyContent: "space-between", color: "var(--text-primary)", fontSize: "0.9rem" }}>
+            Enable wake word
+            <input
+              type="checkbox"
+              checked={agentSettings?.wake_word_enabled ?? false}
+              disabled={!agentSettings}
+              onChange={(event) => updateSetting({ wake_word_enabled: event.target.checked })}
+            />
+          </label>
+          {agentSettings && (
+            <label style={{ color: "var(--text-primary)", fontSize: "0.9rem" }}>
+              Sensitivity: {agentSettings.wake_word_sensitivity.toFixed(2)}
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.05"
+                value={agentSettings.wake_word_sensitivity}
+                onChange={(event) => updateSetting({ wake_word_sensitivity: Number(event.target.value) })}
+                style={{ width: "100%" }}
+              />
+            </label>
+          )}
+          {agentError && <p style={{ color: "var(--accent-coral)", fontSize: "0.8rem" }}>{agentError}</p>}
+          {!agentSettings && !agentError && <p style={{ color: "var(--text-secondary)", fontSize: "0.8rem" }}><MicOff size={14} /> Offline wake-word engine is not configured.</p>}
         </Section>
       </motion.div>
     </div>

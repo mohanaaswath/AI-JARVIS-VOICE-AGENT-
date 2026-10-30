@@ -9,3 +9,4 @@ livekit-api>=1.0.0
 livekit-agents>=1.8,<2.0
 livekit-plugins-google>=1.8,<2.0
 livekit-plugins-noise-cancellation>=0.2,<1.0
+openwakeword>=0.6; platform_system == "Windows"

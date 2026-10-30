@@ -18,6 +18,7 @@ class Settings:
     LIVEKIT_API_KEY: str = os.getenv("LIVEKIT_API_KEY", "")
     LIVEKIT_API_SECRET: str = os.getenv("LIVEKIT_API_SECRET", "")
     LIVEKIT_AGENT_NAME: str = os.getenv("LIVEKIT_AGENT_NAME", "my-agent")
+    LOCAL_AGENT_TOKEN: str = os.getenv("LOCAL_AGENT_TOKEN", "")
 
     # App
     ALLOWED_ORIGINS: list[str] = os.getenv(

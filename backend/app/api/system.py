@@ -100,6 +100,24 @@ async def execute_action_endpoint(req: ExecuteActionRequest) -> ActionResult:
             raise HTTPException(status_code=400, detail="Missing parameter: 'website'")
         res = sys_svc.open_website(website)
 
+    elif req.action_name == "search_allowed_files":
+        query = req.parameters.get("query")
+        if not query:
+            raise HTTPException(status_code=400, detail="Missing parameter: 'query'")
+        res = sys_svc.search_allowed_files(query, req.parameters.get("extension", ""))
+
+    elif req.action_name == "create_allowed_folder":
+        folder_path = req.parameters.get("folder_path")
+        if not folder_path:
+            raise HTTPException(status_code=400, detail="Missing parameter: 'folder_path'")
+        res = sys_svc.create_allowed_folder(folder_path)
+
+    elif req.action_name == "create_allowed_file":
+        file_path = req.parameters.get("file_path")
+        if not file_path:
+            raise HTTPException(status_code=400, detail="Missing parameter: 'file_path'")
+        res = sys_svc.create_allowed_file(file_path)
+
     else:
         raise HTTPException(
             status_code=400,

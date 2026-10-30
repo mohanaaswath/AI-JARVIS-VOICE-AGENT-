@@ -10,6 +10,7 @@ from pathlib import Path
 import platform
 import subprocess
 import time
+import shutil
 from typing import Any
 import uuid
 import webbrowser
@@ -747,6 +748,88 @@ class SystemService:
                 verification_status=VerificationStatus.FAILED,
                 message=f"Error reading file '{file_path}': {exc}",
                 error_code="FILE_READ_ERROR",
+            )
+
+    def search_allowed_files(self, query: str, extension: str = "") -> ActionResult:
+        action_id = f"search-{uuid.uuid4().hex[:8]}"
+        query = (query or "").strip().lower()
+        extension = (extension or "").strip().lower()
+        if not query:
+            return ActionResult(
+                action_id=action_id, action_name="search_allowed_files",
+                risk_level=RiskLevel.LEVEL_1_READONLY, status=ActionStatus.FAILED,
+                requested_value=query, verification_status=VerificationStatus.FAILED,
+                message="A search term is required.", error_code="EMPTY_SEARCH",
+            )
+        matches: list[str] = []
+        for root in self.PERMITTED_ROOTS:
+            if not root.exists():
+                continue
+            try:
+                for item in root.rglob("*"):
+                    if len(matches) >= 50:
+                        break
+                    if not item.is_file() or not self._is_path_permitted(item)[0]:
+                        continue
+                    if extension and item.suffix.lower() != extension:
+                        continue
+                    if query in item.name.lower():
+                        matches.append(str(item))
+            except OSError:
+                continue
+        return ActionResult(
+            action_id=action_id, action_name="search_allowed_files",
+            risk_level=RiskLevel.LEVEL_1_READONLY, status=ActionStatus.SUCCESS,
+            requested_value={"query": query, "extension": extension},
+            observed_value=len(matches), verification_status=VerificationStatus.VERIFIED,
+            message=f"Found {len(matches)} matching files.",
+            parameters={"matches": matches},
+        )
+
+    def create_allowed_folder(self, folder_path: str) -> ActionResult:
+        return self._create_path(Path(folder_path), "create_allowed_folder", True)
+
+    def create_allowed_file(self, file_path: str) -> ActionResult:
+        return self._create_path(Path(file_path), "create_allowed_file", False)
+
+    def _create_path(self, target: Path, action_name: str, directory: bool) -> ActionResult:
+        action_id = f"file-{uuid.uuid4().hex[:8]}"
+        if not target.is_absolute():
+            target = PROJECT_ROOT / target
+        ok, reason = self._is_path_permitted(target)
+        if not ok:
+            return ActionResult(
+                action_id=action_id, action_name=action_name,
+                risk_level=RiskLevel.LEVEL_3_SENSITIVE, status=ActionStatus.FAILED,
+                requested_value=str(target), verification_status=VerificationStatus.FAILED,
+                message=reason, error_code="PATH_FORBIDDEN",
+            )
+        try:
+            if target.exists():
+                return ActionResult(
+                    action_id=action_id, action_name=action_name,
+                    risk_level=RiskLevel.LEVEL_3_SENSITIVE, status=ActionStatus.FAILED,
+                    requested_value=str(target), verification_status=VerificationStatus.FAILED,
+                    message="The target already exists.", error_code="TARGET_EXISTS",
+                )
+            if directory:
+                target.mkdir(parents=True)
+            else:
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.touch()
+            return ActionResult(
+                action_id=action_id, action_name=action_name,
+                risk_level=RiskLevel.LEVEL_3_SENSITIVE, status=ActionStatus.SUCCESS,
+                requested_value=str(target), observed_value=str(target),
+                verification_status=VerificationStatus.VERIFIED,
+                message=f"Created {'folder' if directory else 'file'} '{target.name}'.",
+            )
+        except OSError as exc:
+            return ActionResult(
+                action_id=action_id, action_name=action_name,
+                risk_level=RiskLevel.LEVEL_3_SENSITIVE, status=ActionStatus.FAILED,
+                requested_value=str(target), verification_status=VerificationStatus.FAILED,
+                message=f"Could not create '{target}': {exc}", error_code="CREATE_ERROR",
             )
 
     def open_allowed_folder(self, folder_name: str) -> ActionResult:

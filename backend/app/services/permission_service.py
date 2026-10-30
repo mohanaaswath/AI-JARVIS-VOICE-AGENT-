@@ -33,6 +33,11 @@ class PermissionService:
         "set_dark_mode": RiskLevel.LEVEL_2_LOW_RISK,
         "open_allowed_folder": RiskLevel.LEVEL_2_LOW_RISK,
         "open_website": RiskLevel.LEVEL_1_READONLY,
+        "search_allowed_files": RiskLevel.LEVEL_1_READONLY,
+        "create_allowed_folder": RiskLevel.LEVEL_3_SENSITIVE,
+        "create_allowed_file": RiskLevel.LEVEL_3_SENSITIVE,
+        "rename_allowed_file": RiskLevel.LEVEL_3_SENSITIVE,
+        "copy_allowed_file": RiskLevel.LEVEL_3_SENSITIVE,
 
         # Level 3: Sensitive or disruptive actions (require explicit user approval)
         "change_bluetooth_state": RiskLevel.LEVEL_3_SENSITIVE,

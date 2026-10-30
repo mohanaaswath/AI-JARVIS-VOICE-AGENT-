@@ -12,6 +12,20 @@ export interface AgentStatus {
   age_seconds?: number;
   agent_name?: string;
   pid?: number;
+  settings?: AgentSettings;
+  wake_word?: {
+    available: boolean;
+    reason: string;
+    wake_word: string;
+  };
+}
+
+export interface AgentSettings {
+  wake_word_enabled: boolean;
+  microphone_muted: boolean;
+  wake_word_sensitivity: number;
+  conversation_mode: "single" | "continuous";
+  inactivity_timeout_seconds: number;
 }
 
 export type ActionStatus =

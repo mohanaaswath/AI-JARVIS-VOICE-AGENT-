@@ -7,6 +7,7 @@ from tools.settings_tools import open_settings_page
 from tools.browser_tools import open_website
 from tools.app_tools import open_application
 from tools.file_tools import list_allowed_files, read_allowed_file, open_allowed_folder
+from tools.file_management_tools import search_allowed_files, create_allowed_folder, create_allowed_file
 from tools.system_info_tools import (
     get_system_status,
     get_battery_status,
@@ -42,6 +43,9 @@ ALL_JARVIS_TOOLS = [
     list_allowed_files,
     read_allowed_file,
     open_allowed_folder,
+    search_allowed_files,
+    create_allowed_folder,
+    create_allowed_file,
 ]
 
 __all__ = [
@@ -56,6 +60,9 @@ __all__ = [
     "list_allowed_files",
     "read_allowed_file",
     "open_allowed_folder",
+    "search_allowed_files",
+    "create_allowed_folder",
+    "create_allowed_file",
     "get_system_status",
     "get_battery_status",
     "get_memory_usage",

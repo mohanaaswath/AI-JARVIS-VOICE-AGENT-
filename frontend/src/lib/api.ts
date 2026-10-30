@@ -5,6 +5,7 @@ import type {
   ApprovalRequest,
   SystemStatus,
   AgentStatus,
+  AgentSettings,
 } from "../types";
 
 const api = axios.create({
@@ -54,6 +55,13 @@ export async function fetchLiveKitStatus(): Promise<{
 
 export async function fetchAgentStatus(): Promise<AgentStatus> {
   const { data } = await api.get<AgentStatus>("/agent/status");
+  return data;
+}
+
+export async function updateAgentSettings(
+  settings: Partial<AgentSettings>
+): Promise<{ settings: AgentSettings }> {
+  const { data } = await api.patch<{ settings: AgentSettings }>("/agent/settings", settings);
   return data;
 }
 
