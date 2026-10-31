@@ -4,6 +4,7 @@ import sys
 import logging
 import threading
 import atexit
+import asyncio
 from dotenv import load_dotenv
 
 BACKEND_DIR = Path(__file__).resolve().parent
@@ -23,6 +24,12 @@ from tools import ALL_JARVIS_TOOLS
 from app.services.agent_status_service import write_agent_heartbeat
 
 logger = logging.getLogger("jarvis.agent")
+STOP_PATH = Path(os.getenv("LOCALAPPDATA") or os.getenv("TEMP") or ".") / "Jarvis" / "agent.stop"
+
+
+def is_shutdown_phrase(transcript: str) -> bool:
+    normalized = " ".join(transcript.casefold().split())
+    return normalized in {"ok jarvis bye", "okay jarvis bye"}
 
 
 class Assistant(Agent):
@@ -85,6 +92,16 @@ async def my_agent(ctx: agents.JobContext):
             ),
         ),
     )
+
+    @session.on("user_input_transcribed")
+    def on_user_input_transcribed(event: object) -> None:
+        transcript = getattr(event, "transcript", "")
+        is_final = getattr(event, "is_final", False)
+        if is_final and isinstance(transcript, str) and is_shutdown_phrase(transcript):
+            logger.info("Shutdown phrase detected; ending JARVIS.")
+            STOP_PATH.parent.mkdir(parents=True, exist_ok=True)
+            STOP_PATH.touch()
+            asyncio.create_task(session.shutdown())
 
     await session.generate_reply(
         instructions=Agent_Response

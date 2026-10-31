@@ -1,18 +1,11 @@
-# Wake Word Setup
+# Offline Activation
 
-Wake-word support is not implemented in the current repository. The existing
-voice view starts a browser microphone session and the LiveKit worker handles
-the conversation.
+The Windows local agent supports a simple offline activation flow:
 
-The planned local flow is:
+1. Start `backend\local_agent.py`.
+2. Clap twice within approximately 0.8 seconds.
+3. The existing LiveKit voice worker starts.
+4. Say “OK Jarvis, bye” to end the session and stop the worker.
 
-1. Run an offline detector for `Hey Jarvis`.
-2. Capture one command after activation.
-3. Transcribe locally or through the configured voice provider.
-4. Execute only validated tools.
-5. Verify the result and speak the response.
-6. Return to standby.
-
-The detector, sensitivity controls, microphone selection, mute state, and
-privacy indicator must be tested on Windows before this feature is enabled by
-default.
+The detector uses the default input device through `sounddevice`. It does not
+record or upload audio while waiting for the two-clap activation.

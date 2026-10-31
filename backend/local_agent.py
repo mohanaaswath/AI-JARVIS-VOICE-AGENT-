@@ -8,6 +8,7 @@ from pathlib import Path
 import signal
 import subprocess
 import sys
+import threading
 import time
 
 try:
@@ -17,7 +18,9 @@ except ImportError:
 
 LOGGER = logging.getLogger("jarvis.local_agent")
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-LOCK_PATH = Path(os.getenv("LOCALAPPDATA") or os.getenv("TEMP") or ".") / "Jarvis" / "agent.lock"
+CONTROL_DIR = Path(os.getenv("LOCALAPPDATA") or os.getenv("TEMP") or ".") / "Jarvis"
+LOCK_PATH = CONTROL_DIR / "agent.lock"
+STOP_PATH = CONTROL_DIR / "agent.stop"
 
 
 class SingleInstance:
@@ -63,10 +66,13 @@ def run_supervisor(restart_delay: float = 5.0) -> int:
         return 0
 
     stopping = False
+    stop_event = threading.Event()
+    STOP_PATH.unlink(missing_ok=True)
 
     def stop(_signum: int, _frame: object) -> None:
         nonlocal stopping
         stopping = True
+        stop_event.set()
 
     signal.signal(signal.SIGINT, stop)
     if hasattr(signal, "SIGTERM"):
@@ -74,13 +80,31 @@ def run_supervisor(restart_delay: float = 5.0) -> int:
 
     try:
         while not stopping:
-            LOGGER.info("Starting LiveKit voice worker.")
+            LOGGER.info("Waiting for two claps to activate JARVIS.")
+            try:
+                from voice.clap_detector import wait_for_double_clap
+
+                if not wait_for_double_clap(stop_event):
+                    break
+            except RuntimeError:
+                LOGGER.exception("Double-clap activation is unavailable.")
+                break
+
+            if stopping:
+                break
+            LOGGER.info("Double clap detected; starting LiveKit voice worker.")
             process = subprocess.Popen(build_worker_command(), cwd=Path(__file__).parent)
             while process.poll() is None and not stopping:
+                if STOP_PATH.exists():
+                    stopping = True
+                    process.terminate()
+                    break
                 time.sleep(1)
             if stopping and process.poll() is None:
-                process.terminate()
                 process.wait(timeout=10)
+                break
+            if STOP_PATH.exists():
+                STOP_PATH.unlink(missing_ok=True)
                 break
             LOGGER.error("Voice worker exited with code %s; restarting.", process.returncode)
             time.sleep(restart_delay)
