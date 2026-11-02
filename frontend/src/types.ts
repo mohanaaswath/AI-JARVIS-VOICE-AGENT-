@@ -8,6 +8,7 @@ export interface HealthStatus {
 export interface AgentStatus {
   available: boolean;
   state: "running" | "offline" | "unknown";
+  lifecycle_state?: "standby" | "activating" | "active" | "deactivating" | "paused" | "error" | "shutting_down" | "unknown";
   reason?: string;
   age_seconds?: number;
   agent_name?: string;

@@ -58,6 +58,26 @@ export async function fetchAgentStatus(): Promise<AgentStatus> {
   return data;
 }
 
+export async function activateAgent(): Promise<{ status: string; message: string }> {
+  const { data } = await api.post<{ status: string; message: string }>("/agent/activate");
+  return data;
+}
+
+export async function deactivateAgent(): Promise<{ status: string; message: string }> {
+  const { data } = await api.post<{ status: string; message: string }>("/agent/deactivate");
+  return data;
+}
+
+export async function pauseAgent(): Promise<{ status: string; message: string }> {
+  const { data } = await api.post<{ status: string; message: string }>("/agent/pause");
+  return data;
+}
+
+export async function resumeAgent(): Promise<{ status: string; message: string }> {
+  const { data } = await api.post<{ status: string; message: string }>("/agent/resume");
+  return data;
+}
+
 export async function updateAgentSettings(
   settings: Partial<AgentSettings>
 ): Promise<{ settings: AgentSettings }> {

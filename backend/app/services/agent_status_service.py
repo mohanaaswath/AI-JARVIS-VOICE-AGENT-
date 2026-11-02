@@ -7,6 +7,11 @@ import time
 from pathlib import Path
 from typing import Any
 
+# Control-signal paths for the background agent
+_CONTROL_DIR = Path(os.getenv("LOCALAPPDATA") or os.getenv("TEMP") or ".") / "Jarvis"
+ACTIVATE_SIGNAL_PATH = _CONTROL_DIR / "activate.signal"
+DEACTIVATE_SIGNAL_PATH = _CONTROL_DIR / "deactivate.signal"
+
 
 def heartbeat_path() -> Path:
     base = os.getenv("LOCALAPPDATA") or os.getenv("TEMP") or "."
@@ -31,6 +36,7 @@ def read_agent_status(max_age_seconds: int = 15) -> dict[str, Any]:
     return {
         "available": available,
         "state": payload.get("state", "unknown") if available else "offline",
+        "lifecycle_state": payload.get("lifecycle_state", "unknown"),
         "age_seconds": round(age, 1),
         "agent_name": payload.get("agent_name"),
         "pid": payload.get("pid"),
@@ -53,3 +59,15 @@ def write_agent_heartbeat(state: str, agent_name: str, pid: int) -> None:
         encoding="utf-8",
     )
     temporary.replace(path)
+
+
+def send_activate_signal() -> None:
+    """Write activation signal for the background agent."""
+    _CONTROL_DIR.mkdir(parents=True, exist_ok=True)
+    ACTIVATE_SIGNAL_PATH.touch()
+
+
+def send_deactivate_signal() -> None:
+    """Write deactivation signal for the background agent."""
+    _CONTROL_DIR.mkdir(parents=True, exist_ok=True)
+    DEACTIVATE_SIGNAL_PATH.touch()

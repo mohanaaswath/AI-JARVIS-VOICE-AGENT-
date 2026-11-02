@@ -31,6 +31,10 @@ import {
   approveAction,
   rejectAction,
   executeAction,
+  activateAgent,
+  deactivateAgent,
+  pauseAgent,
+  resumeAgent,
 } from "../lib/api";
 import type {
   AppView,
@@ -138,6 +142,15 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
       console.error(`Quick action ${actionName} failed:`, err);
     } finally {
       setActionInProgress(null);
+    }
+  };
+
+  const handleAgentControl = async (control: () => Promise<unknown>) => {
+    try {
+      await control();
+      await loadData();
+    } catch (err) {
+      console.error("Background agent control failed:", err);
     }
   };
 
@@ -345,13 +358,19 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
             <span style={{ fontSize: "0.85rem", color: "#64748b", fontWeight: 500 }}>Background Agent</span>
           </div>
           <div style={{ fontSize: "1.3rem", fontWeight: 700, color: "var(--text-primary)" }}>
-            {loading ? "Checking..." : agent.available ? "Online" : "Offline"}
+            {loading ? "Checking..." : (agent.lifecycle_state ?? (agent.available ? "running" : "offline")).toUpperCase()}
           </div>
           <p style={{ fontSize: "0.75rem", color: agent.available ? "var(--accent-lime)" : "var(--accent-coral)", marginTop: "0.25rem" }}>
             {agent.available
               ? `Worker ${agent.agent_name ?? "my-agent"} is running`
-              : "Start the Windows voice worker to enable commands"}
+              : "Start the Windows background agent to enable commands"}
           </p>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginTop: "0.75rem" }}>
+            <button type="button" onClick={() => handleAgentControl(activateAgent)} disabled={!agent.available}>Activate</button>
+            <button type="button" onClick={() => handleAgentControl(deactivateAgent)} disabled={!agent.available}>Deactivate</button>
+            <button type="button" onClick={() => handleAgentControl(pauseAgent)} disabled={!agent.available}>Pause</button>
+            <button type="button" onClick={() => handleAgentControl(resumeAgent)} disabled={!agent.available}>Resume</button>
+          </div>
         </motion.div>
 
         {/* LiveKit Voice Card */}

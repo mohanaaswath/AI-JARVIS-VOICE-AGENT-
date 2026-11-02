@@ -26,12 +26,34 @@ from app.services.agent_status_service import write_agent_heartbeat
 logger = logging.getLogger("jarvis.agent")
 STOP_PATH = Path(os.getenv("LOCALAPPDATA") or os.getenv("TEMP") or ".") / "Jarvis" / "agent.stop"
 
+# ── Goodbye phrase detection ──────────────────────────────────────────────────
+# These phrases end the active conversation and return JARVIS to standby.
+# They do NOT terminate the background process.
+_GOODBYE_PHRASES = {
+    "bye jarvis",
+    "goodbye jarvis",
+    "ok jarvis bye",
+    "okay jarvis bye",
+    "jarvis bye",
+    "jarvis goodbye",
+    "jarvis stop",
+    "stop jarvis",
+    "sleep jarvis",
+    "jarvis sleep",
+}
+
 
 def is_shutdown_phrase(transcript: str) -> bool:
+    """
+    Returns True when the transcript matches a goodbye/deactivation phrase.
+    This ends the active voice session and returns JARVIS to standby.
+    It does NOT terminate the background process.
+    """
     normalized = " ".join(transcript.casefold().split())
-    return normalized in {"ok jarvis bye", "okay jarvis bye"}
+    return normalized in _GOODBYE_PHRASES
 
 
+# ── LiveKit Agent worker ──────────────────────────────────────────────────────
 class Assistant(Agent):
     def __init__(self) -> None:
         super().__init__(
@@ -98,7 +120,9 @@ async def my_agent(ctx: agents.JobContext):
         transcript = getattr(event, "transcript", "")
         is_final = getattr(event, "is_final", False)
         if is_final and isinstance(transcript, str) and is_shutdown_phrase(transcript):
-            logger.info("Shutdown phrase detected; ending JARVIS.")
+            logger.info("Goodbye phrase detected: '%s' — ending session", transcript.strip())
+            # Write stop signal so the background agent supervisor knows
+            # to return to STANDBY (not terminate).
             STOP_PATH.parent.mkdir(parents=True, exist_ok=True)
             STOP_PATH.touch()
             asyncio.create_task(session.shutdown())
