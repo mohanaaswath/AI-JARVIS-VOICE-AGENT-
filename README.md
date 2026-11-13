@@ -50,7 +50,7 @@ Generated/local directories such as `venv`, `frontend/node_modules`, and
 3. FastAPI reads LiveKit credentials from environment variables and issues a
    short-lived token at `POST /api/livekit/token`.
 4. The browser connects to LiveKit Cloud using that token.
-5. The local supervisor waits for two claps before starting the LiveKit worker.
+5. The local supervisor listens offline for “Hello Jarvis” and speaks a short greeting when detected.
 6. The LiveKit agent worker joins the room as `my-agent` and uses Google
    Realtime Voice to converse with the user.
 7. Saying “OK Jarvis, bye” ends the active voice session and stops the worker.
@@ -126,8 +126,9 @@ cd frontend
 npm run dev
 ```
 
-The local agent waits for two claps before starting the LiveKit worker. Say
-“OK Jarvis, bye” to stop the active worker and return to clap standby.
+The background agent listens offline for “Hello Jarvis”. It downloads a small
+English Vosk model on first launch, speaks a greeting, and starts the LiveKit worker. Say
+“OK Jarvis, bye” to stop the active worker and return to wake-word standby.
 
 ## API endpoints
 

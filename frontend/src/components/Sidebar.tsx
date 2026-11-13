@@ -31,6 +31,7 @@ export default function Sidebar({
 }: SidebarProps) {
   return (
     <motion.aside
+      className="app-sidebar"
       animate={{ width: collapsed ? 64 : 240 }}
       transition={{ duration: 0.25, ease: "easeInOut" }}
       style={{
@@ -45,6 +46,7 @@ export default function Sidebar({
     >
       {/* Logo */}
       <div
+        className="sidebar-brand"
         style={{
           padding: "1.25rem 1rem",
           display: "flex",
@@ -90,12 +92,13 @@ export default function Sidebar({
       </div>
 
       {/* Nav items */}
-      <nav style={{ padding: "0.5rem 0.5rem", flex: 1, marginTop: "0.5rem" }}>
+      <nav className="sidebar-nav" style={{ padding: "0.5rem 0.5rem", flex: 1, marginTop: "0.5rem" }}>
         {NAV_ITEMS.map((item) => {
           const active = currentView === item.id;
           return (
             <button
               key={item.id}
+              className={`sidebar-item${active ? " active" : ""}`}
               onClick={() => onViewChange(item.id)}
               style={{
                 width: "100%",
@@ -131,6 +134,7 @@ export default function Sidebar({
               <AnimatePresence>
                 {!collapsed && (
                   <motion.span
+                    className="sidebar-label"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
@@ -147,6 +151,7 @@ export default function Sidebar({
 
       {/* Collapse toggle */}
       <button
+        className="sidebar-toggle"
         onClick={onToggleCollapse}
         style={{
           position: "absolute",

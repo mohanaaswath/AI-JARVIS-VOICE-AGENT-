@@ -26,6 +26,7 @@ import atexit
 import logging
 import os
 import signal
+import subprocess
 import sys
 import threading
 import time
@@ -163,12 +164,34 @@ class BackgroundAgent:
             )
             return
 
+        threading.Thread(target=self._speak_greeting, name="jarvis-greeting", daemon=True).start()
+
         logger.info("Wake phrase detected: '%s' — activating JARVIS", phrase)
         threading.Thread(
             target=self._activate,
             name="jarvis-activator",
             daemon=True,
         ).start()
+
+    @staticmethod
+    def _speak_greeting() -> None:
+        """Use Windows' built-in speech synthesizer for an immediate reply."""
+        command = (
+            "Add-Type -AssemblyName System.Speech; "
+            "$voice = New-Object System.Speech.Synthesis.SpeechSynthesizer; "
+            "$voice.Speak('Yes, I am here. How can I help you?'); "
+            "$voice.Dispose()"
+        )
+        try:
+            subprocess.run(
+                ["powershell.exe", "-NoProfile", "-NonInteractive", "-Command", command],
+                check=True,
+                timeout=30,
+                capture_output=True,
+                text=True,
+            )
+        except (OSError, subprocess.SubprocessError):
+            logger.exception("Could not play the JARVIS greeting")
 
     # ── Activation/Deactivation ────────────────────────────────────────────────
     def _activate(self) -> None:

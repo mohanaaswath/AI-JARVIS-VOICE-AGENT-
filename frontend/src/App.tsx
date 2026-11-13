@@ -34,6 +34,7 @@ export default function App() {
 
   return (
     <div
+      className="app-shell"
       style={{
         display: "flex",
         height: "100vh",

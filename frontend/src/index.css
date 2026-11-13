@@ -132,6 +132,83 @@
 .btn-ghost:hover { background: rgba(103,232,249,.1); border-color: var(--accent-cyan); color: var(--text-primary); }
 
 @media (max-width: 640px) {
-  .dashboard-hero h1 { font-size: 2.5rem; }
-  .voice-page { padding: 1.25rem !important; gap: 1.35rem !important; }
+  html, body, #root { width: 100%; height: 100%; min-height: 0; }
+  body { overflow: hidden; }
+  .app-shell {
+    height: 100dvh !important;
+    min-height: 0 !important;
+    flex-direction: column !important;
+  }
+  .app-main { min-height: 0; width: 100%; overflow-x: hidden !important; overflow-y: auto !important; }
+  .app-sidebar {
+    order: 2;
+    width: 100% !important;
+    height: calc(62px + env(safe-area-inset-bottom)) !important;
+    min-height: calc(62px + env(safe-area-inset-bottom));
+    flex-direction: row !important;
+    align-items: stretch;
+    border: 0 !important;
+    border-top: 1px solid var(--border) !important;
+    padding-bottom: env(safe-area-inset-bottom);
+    background: var(--sidebar-bg);
+    backdrop-filter: blur(18px);
+    z-index: 20;
+  }
+  .sidebar-brand, .sidebar-toggle { display: none !important; }
+  .sidebar-nav {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    justify-content: space-around;
+    gap: 4px;
+    margin: 0 !important;
+    padding: 4px 8px !important;
+  }
+  .sidebar-item {
+    min-width: 0;
+    min-height: 50px;
+    flex: 1;
+    flex-direction: column;
+    justify-content: center !important;
+    gap: 4px !important;
+    margin: 0 !important;
+    padding: 5px 2px !important;
+    border: 0 !important;
+    border-top: 2px solid transparent !important;
+    border-radius: 8px !important;
+    font-size: 0.7rem !important;
+  }
+  .sidebar-item.active { border-top-color: var(--accent-lime) !important; }
+  .sidebar-label { white-space: nowrap; }
+  .dashboard-page { padding: 1rem !important; gap: 1.1rem !important; }
+  .dashboard-hero h1 { font-size: clamp(2rem, 9vw, 2.5rem) !important; }
+  .dashboard-hero p { font-size: 0.9rem !important; }
+  .dashboard-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 0.65rem !important; }
+  .dashboard-grid button { min-height: 44px; }
+  .voice-page { min-height: 100%; padding: 1rem !important; gap: 1.1rem !important; }
+  .voice-page > div:first-child p { max-width: 34rem; padding-inline: 0.25rem; }
+  .voice-page button { min-height: 48px; }
+  .voice-page .glass { max-width: 100%; }
+  .settings-page { padding: 1.1rem !important; }
+  .settings-page .glass { padding: 1rem !important; }
+  .theme-options { flex-wrap: wrap; }
+  .theme-option, .btn-glow, .btn-ghost { min-height: 44px; }
+}
+
+@media (min-width: 641px) and (max-width: 900px) {
+  .app-sidebar { width: 68px !important; }
+  .sidebar-brand { justify-content: center !important; padding-inline: 0.75rem !important; }
+  .sidebar-brand > span { display: none; }
+  .sidebar-nav { padding-inline: 0.4rem !important; }
+  .sidebar-item { justify-content: center !important; padding-inline: 0.5rem !important; }
+  .sidebar-label, .sidebar-toggle { display: none !important; }
+  .dashboard-page { padding: 1.5rem !important; }
+  .settings-page { padding: 1.5rem !important; }
+}
+
+@media (max-width: 360px) {
+  .sidebar-nav { padding-inline: 4px !important; gap: 2px; }
+  .sidebar-item { font-size: 0.64rem !important; }
+  .dashboard-grid { grid-template-columns: 1fr !important; }
+  .voice-page .eyebrow { font-size: 0.58rem; letter-spacing: 0.14em; }
 }

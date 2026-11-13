@@ -30,7 +30,7 @@ export default function SettingsView({ theme, onThemeChange }: SettingsViewProps
   };
 
   return (
-    <div style={{ padding: "2rem", maxWidth: 640, margin: "0 auto" }}>
+    <div className="settings-page" style={{ padding: "2rem", maxWidth: 640, margin: "0 auto", width: "100%" }}>
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
         <div className="eyebrow"><span className="eyebrow-dot" /> CONTROL DECK</div>
         <h1 style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)", fontWeight: 800, letterSpacing: "-.06em", color: "var(--text-primary)", marginTop: ".8rem", marginBottom: "0.5rem" }}>

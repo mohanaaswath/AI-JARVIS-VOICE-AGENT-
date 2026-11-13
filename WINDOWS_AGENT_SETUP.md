@@ -38,10 +38,10 @@ Run `setup-jarvis-autostart.bat` to register the launcher at user logon. The
 launcher runs in the interactive user session rather than as a Windows
 service, so microphone and desktop operations remain available.
 
-## Current wake-word limitation
+## Wake phrase
 
-`openwakeword` and `sounddevice` are optional Windows dependencies. The audio
-loop and sensitivity setting are present, but the bundled model must be
-verified for the requested phrase before claiming support for both
-“Hello Jarvis” and “Hey Jarvis”. The current fallback is a double-clap
-detector and is not a substitute for either phrase.
+The listener recognizes “Hello Jarvis” locally with Vosk and `sounddevice`.
+The small English model downloads on first launch to
+`%LOCALAPPDATA%\Jarvis\models`. There is no clap fallback. On recognition,
+Windows speech synthesis gives an immediate spoken greeting. The full LiveKit
+conversation still requires the browser voice session to be connected.
