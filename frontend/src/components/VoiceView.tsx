@@ -269,7 +269,7 @@ export default function VoiceView() {
           }}
         >
           <img
-            src="/Jarvis%20image.jpg"
+            src={`${import.meta.env.BASE_URL}Jarvis%20image.jpg`}
             alt="JARVIS assistant"
             style={{
               width: "100%",
