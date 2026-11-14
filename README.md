@@ -95,6 +95,12 @@ LIVEKIT_AGENT_NAME=my-agent
 The backend and agent load this file from `frontend\.env`. Do not commit it or
 expose the API secret to browser code.
 
+For remote hosting, configure `API_AUTH_TOKEN`, `APP_ENV=production`,
+`HTTPS_ONLY=true`, and `ALLOWED_ORIGINS` on the backend host. Set
+`VITE_API_BASE_URL` to the backend's HTTPS origin only when building the public
+frontend. Follow [DEPLOYMENT_SECURITY.md](DEPLOYMENT_SECURITY.md); never place
+backend credentials in frontend code or GitHub Pages build secrets.
+
 ## Run the application
 
 ### One-click Windows startup

@@ -18,6 +18,10 @@ tool and `/api/system/actions`. It accepts supported aliases such as
 `youtube`, `google`, `github`, `gmail`, and `stackoverflow`, or an HTTP(S)
 URL. It does not submit forms or handle authentication.
 
-The local-agent API and WebSocket contract will be added only after local
-authentication and origin restrictions are defined. The automation API must
-not be exposed publicly by default.
+All API routes other than `GET /api/health` require `Authorization: Bearer
+<API_AUTH_TOKEN>` for remote requests. In development, loopback requests may
+omit the token unless `API_AUTH_TOKEN` is configured. Production startup
+requires `APP_ENV=production`, `API_AUTH_TOKEN`, `HTTPS_ONLY=true`, and
+HTTPS-only `ALLOWED_ORIGINS`. See [DEPLOYMENT_SECURITY.md](DEPLOYMENT_SECURITY.md)
+before deploying; the token grants access to local Windows automation and must
+be kept private.

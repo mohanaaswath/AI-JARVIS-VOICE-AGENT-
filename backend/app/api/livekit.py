@@ -5,7 +5,8 @@ The API secret never leaves the server.
 """
 import logging
 import uuid
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
+from app.security import require_api_auth
 from app.schemas.voice import TokenRequest, TokenResponse
 from app.services.livekit_service import LiveKitService
 from app.config import get_settings
@@ -24,7 +25,12 @@ def _get_service(request: Request) -> LiveKitService:
     return svc
 
 
-@router.post("/livekit/token", response_model=TokenResponse, tags=["LiveKit"])
+@router.post(
+    "/livekit/token",
+    response_model=TokenResponse,
+    tags=["LiveKit"],
+    dependencies=[Depends(require_api_auth)],
+)
 async def get_livekit_token(body: TokenRequest, request: Request) -> TokenResponse:
     """
     Issues a short-lived LiveKit JWT.
@@ -54,7 +60,10 @@ async def get_livekit_token(body: TokenRequest, request: Request) -> TokenRespon
 
 
 @router.get("/livekit/status", tags=["LiveKit"])
-async def livekit_status(request: Request) -> dict:
+async def livekit_status(
+    request: Request,
+    _: None = Depends(require_api_auth),
+) -> dict:
     """Returns whether LiveKit is configured (without revealing secrets)."""
     settings = get_settings()
     return {

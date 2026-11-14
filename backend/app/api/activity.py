@@ -1,11 +1,12 @@
 """
 api/activity.py — FastAPI endpoints for retrieving past system action history and verification logs.
 """
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
+from app.security import require_api_auth
 from app.schemas.actions import ActionResult
 from app.services import get_activity_service
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_api_auth)])
 
 
 @router.get("/activity", response_model=list[ActionResult], tags=["Activity"])

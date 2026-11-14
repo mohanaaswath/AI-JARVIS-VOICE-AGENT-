@@ -9,9 +9,32 @@ import type {
 } from "../types";
 
 const api = axios.create({
-  baseURL: "/api",
+  baseURL: `${(import.meta.env.VITE_API_BASE_URL || "").replace(/\/+$/, "")}/api`,
   timeout: 30000,
   headers: { "Content-Type": "application/json" },
+});
+
+api.interceptors.request.use((config) => {
+  const token = sessionStorage.getItem("jarvis-api-token");
+  if (token) config.headers.set("Authorization", `Bearer ${token}`);
+  return config;
+});
+
+let authPrompt: Promise<string | null> | null = null;
+api.interceptors.response.use(undefined, async (error) => {
+  const config = error.config as (typeof error.config & { _authRetried?: boolean }) | undefined;
+  if (error.response?.status !== 401 || !config || config._authRetried) {
+    return Promise.reject(error);
+  }
+  config._authRetried = true;
+  authPrompt ??= Promise.resolve(window.prompt("Enter your JARVIS API access token"))
+    .then((value) => value?.trim() || null)
+    .finally(() => { authPrompt = null; });
+  const token = await authPrompt;
+  if (!token) return Promise.reject(error);
+  sessionStorage.setItem("jarvis-api-token", token);
+  config.headers.set("Authorization", `Bearer ${token}`);
+  return api.request(config);
 });
 
 // ── Types ─────────────────────────────────────────────────────────────────────

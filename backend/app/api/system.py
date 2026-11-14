@@ -2,13 +2,14 @@
 api/system.py — FastAPI endpoints for Windows system status, audio, and action execution.
 """
 import logging
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
+from app.security import require_api_auth
 from app.schemas.system import SystemStatusResponse, AudioInfo
 from app.schemas.actions import ActionResult, ExecuteActionRequest, ActionStatus, VerificationStatus
 from app.services import get_system_service, get_permission_service, get_activity_service
 
 logger = logging.getLogger(__name__)
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_api_auth)])
 
 
 @router.get("/system/status", response_model=SystemStatusResponse, tags=["System"])

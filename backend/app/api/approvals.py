@@ -1,11 +1,12 @@
 """
 api/approvals.py — FastAPI endpoints for managing pending user approval workflows.
 """
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
+from app.security import require_api_auth
 from app.schemas.actions import ApprovalRequest, ApprovalDecisionRequest
 from app.services import get_permission_service
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_api_auth)])
 
 
 @router.get("/approvals/pending", response_model=list[ApprovalRequest], tags=["Approvals"])

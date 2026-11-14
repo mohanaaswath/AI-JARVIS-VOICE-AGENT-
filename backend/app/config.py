@@ -19,12 +19,16 @@ class Settings:
     LIVEKIT_API_SECRET: str = os.getenv("LIVEKIT_API_SECRET", "")
     LIVEKIT_AGENT_NAME: str = os.getenv("LIVEKIT_AGENT_NAME", "my-agent")
     LOCAL_AGENT_TOKEN: str = os.getenv("LOCAL_AGENT_TOKEN", "")
+    API_AUTH_TOKEN: str = os.getenv("API_AUTH_TOKEN", "")
 
     # App
+    APP_ENV: str = os.getenv("APP_ENV", "development").lower()
+    HTTPS_ONLY: bool = os.getenv("HTTPS_ONLY", "false").lower() == "true"
     ALLOWED_ORIGINS: list[str] = os.getenv(
         "ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000"
     ).split(",")
-    DEBUG: bool = os.getenv("DEBUG", "true").lower() == "true"
+    ALLOWED_ORIGINS = [origin.strip().rstrip("/") for origin in ALLOWED_ORIGINS if origin.strip()]
+    DEBUG: bool = os.getenv("DEBUG", "false").lower() == "true"
 
 
 @lru_cache()
