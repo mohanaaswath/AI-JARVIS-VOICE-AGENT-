@@ -21,11 +21,16 @@ class Settings:
     LOCAL_AGENT_TOKEN: str = os.getenv("LOCAL_AGENT_TOKEN", "")
     API_AUTH_TOKEN: str = os.getenv("API_AUTH_TOKEN", "")
 
+    # Cloud AI Keys
+    GOOGLE_API_KEY: str = os.getenv("GOOGLE_API_KEY", "")
+    OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
+    ANTHROPIC_API_KEY: str = os.getenv("ANTHROPIC_API_KEY", "")
+
     # App
     APP_ENV: str = os.getenv("APP_ENV", "development").lower()
     HTTPS_ONLY: bool = os.getenv("HTTPS_ONLY", "false").lower() == "true"
     ALLOWED_ORIGINS: list[str] = os.getenv(
-        "ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000"
+        "ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173"
     ).split(",")
     ALLOWED_ORIGINS = [origin.strip().rstrip("/") for origin in ALLOWED_ORIGINS if origin.strip()]
     DEBUG: bool = os.getenv("DEBUG", "false").lower() == "true"

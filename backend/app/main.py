@@ -11,7 +11,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import PlainTextResponse
 
 from app.config import get_settings
-from app.api import agent, health, livekit, system, activity, approvals, agent_control
+from app.api import agent, health, livekit, system, activity, approvals, agent_control, chat, search
 from app.services.livekit_service import LiveKitService
 
 logging.basicConfig(
@@ -78,6 +78,8 @@ app.add_middleware(
 
 # ── Routers ──────────────────────────────────────────────────────────────────
 app.include_router(health.router, prefix="/api")
+app.include_router(chat.router, prefix="/api")
+app.include_router(search.router, prefix="/api")
 app.include_router(agent.router, prefix="/api")
 app.include_router(agent_control.router, prefix="/api")
 app.include_router(livekit.router, prefix="/api")

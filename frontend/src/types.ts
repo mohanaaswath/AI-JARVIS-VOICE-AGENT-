@@ -1,4 +1,87 @@
-export type AppView = "voice" | "dashboard" | "settings";
+export type AppView = "dashboard" | "voice" | "chat" | "notes" | "tasks" | "settings";
+
+export type OperatingMode = "online" | "offline";
+
+export type AIModelStatus =
+  | "online"
+  | "offline"
+  | "connecting"
+  | "loading"
+  | "local_ready"
+  | "cloud_ready"
+  | "unconfigured"
+  | "error";
+
+export type AIProvider = "gemini" | "openai" | "claude" | "local";
+
+export interface ChatMessage {
+  id: string;
+  conversationId: string;
+  role: "user" | "assistant" | "system";
+  content: string;
+  timestamp: number;
+  model?: string;
+  provider?: AIProvider;
+  isOffline?: boolean;
+  toolCalls?: {
+    name: string;
+    args: Record<string, any>;
+    result?: any;
+  }[];
+}
+
+export interface Conversation {
+  id: string;
+  title: string;
+  createdAt: number;
+  updatedAt: number;
+  messageCount?: number;
+}
+
+export interface NoteItem {
+  id: string;
+  title: string;
+  content: string;
+  tags: string[];
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface TaskItem {
+  id: string;
+  title: string;
+  description?: string;
+  completed: boolean;
+  priority: "low" | "medium" | "high";
+  dueDate?: string;
+  createdAt: number;
+  completedAt?: number;
+}
+
+export interface VoiceSettings {
+  voiceURI: string;
+  lang: string;
+  rate: number;
+  pitch: number;
+  volume: number;
+  autoSpeak: boolean;
+  continuousListening: boolean;
+}
+
+export interface UserPreferences {
+  theme: "dark" | "light";
+  activeProvider: AIProvider;
+  geminiApiKey?: string;
+  openaiApiKey?: string;
+  claudeApiKey?: string;
+  customEndpoint?: string;
+  geminiModel: string;
+  openaiModel: string;
+  claudeModel: string;
+  localModelEnabled: boolean;
+  voice: VoiceSettings;
+  webSearchEnabled: boolean;
+}
 
 export interface HealthStatus {
   status: "ok" | "degraded" | "unknown";
