@@ -137,7 +137,7 @@ class TrayApp:
                 if self._icon:
                     self._icon.stop()
 
-            def _state_label():
+            def _state_label(_icon=None, _item=None):
                 return f"Status: {self._agent._sm.state.value.upper()}"
 
             menu = pystray.Menu(

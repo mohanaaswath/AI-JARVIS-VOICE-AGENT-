@@ -108,33 +108,24 @@ backend credentials in frontend code or GitHub Pages build secrets.
 Double-click `start-jarvis.bat`. It starts:
 
 - FastAPI at `http://localhost:8000`
-- the LiveKit agent worker
 - Vite at `http://localhost:5173`
+- opens the JARVIS dashboard in the default browser
 
 The launcher prefers `venv\Scripts\python.exe` and falls back to `python` if
 the virtual environment does not exist.
 
 ### Manual startup
 
-Open three PowerShell windows from the repository root:
+Open two PowerShell windows from the repository root:
 
 ```powershell
 # API
 .\venv\Scripts\python.exe -m uvicorn app.main:app --app-dir backend --port 8000
 
-# Voice agent
-Push-Location backend
-..\venv\Scripts\python.exe local_agent.py
-Pop-Location
-
 # Frontend
 cd frontend
 npm run dev
 ```
-
-The background agent listens offline for “Hello Jarvis”. It downloads a small
-English Vosk model on first launch, speaks a greeting, and starts the LiveKit worker. Say
-“OK Jarvis, bye” to stop the active worker and return to wake-word standby.
 
 ## API endpoints
 
