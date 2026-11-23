@@ -1,3 +1,2 @@
 -r backend/requirements.txt
 pytest>=8.0
-openwakeword>=0.6; platform_system == "Windows"

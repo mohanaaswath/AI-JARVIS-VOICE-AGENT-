@@ -7,7 +7,6 @@
 | GET | `/api/health` | Backend and LiveKit readiness |
 | GET | `/api/livekit/status` | LiveKit configuration status |
 | POST | `/api/livekit/token` | Issue a short-lived room token |
-| GET | `/api/agent/status` | Read the local worker heartbeat |
 | GET | `/api/system/status` | Windows system diagnostics |
 | POST | `/api/system/actions` | Execute a validated action |
 | GET | `/api/activity` | Read recent action history |

@@ -2,9 +2,6 @@ from pathlib import Path
 import os
 import sys
 import logging
-import threading
-import atexit
-import asyncio
 from dotenv import load_dotenv
 
 BACKEND_DIR = Path(__file__).resolve().parent
@@ -21,36 +18,7 @@ from livekit.agents import AgentServer, AgentSession, Agent, room_io
 from livekit.plugins import google, noise_cancellation
 from prompt import Agent_Response, Agent_Instruction
 from tools import ALL_JARVIS_TOOLS
-from app.services.agent_status_service import write_agent_heartbeat
-
 logger = logging.getLogger("jarvis.agent")
-STOP_PATH = Path(os.getenv("LOCALAPPDATA") or os.getenv("TEMP") or ".") / "Jarvis" / "agent.stop"
-
-# ── Goodbye phrase detection ──────────────────────────────────────────────────
-# These phrases end the active conversation and return JARVIS to standby.
-# They do NOT terminate the background process.
-_GOODBYE_PHRASES = {
-    "bye jarvis",
-    "goodbye jarvis",
-    "ok jarvis bye",
-    "okay jarvis bye",
-    "jarvis bye",
-    "jarvis goodbye",
-    "jarvis stop",
-    "stop jarvis",
-    "sleep jarvis",
-    "jarvis sleep",
-}
-
-
-def is_shutdown_phrase(transcript: str) -> bool:
-    """
-    Returns True when the transcript matches a goodbye/deactivation phrase.
-    This ends the active voice session and returns JARVIS to standby.
-    It does NOT terminate the background process.
-    """
-    normalized = " ".join(transcript.casefold().split())
-    return normalized in _GOODBYE_PHRASES
 
 
 # ── LiveKit Agent worker ──────────────────────────────────────────────────────
@@ -66,32 +34,6 @@ class Assistant(Agent):
 # production configuration starts eight idle processes, which can make a
 # desktop machine report itself as fully loaded and reject room jobs.
 server = AgentServer(num_idle_processes=1, load_threshold=1.0)
-
-
-def _start_heartbeat() -> threading.Event:
-    stop_event = threading.Event()
-    agent_name = os.getenv("LIVEKIT_AGENT_NAME", "my-agent")
-
-    def update() -> None:
-        while not stop_event.is_set():
-            try:
-                write_agent_heartbeat("running", agent_name, os.getpid())
-            except OSError:
-                logger.warning("Unable to write agent heartbeat", exc_info=True)
-            stop_event.wait(5)
-
-    thread = threading.Thread(target=update, name="jarvis-heartbeat", daemon=True)
-    thread.start()
-
-    def stop() -> None:
-        stop_event.set()
-        try:
-            write_agent_heartbeat("stopped", agent_name, os.getpid())
-        except OSError:
-            logger.warning("Unable to write final agent heartbeat", exc_info=True)
-
-    atexit.register(stop)
-    return stop_event
 
 
 @server.rtc_session(agent_name=os.getenv("LIVEKIT_AGENT_NAME", "my-agent"))
@@ -115,18 +57,6 @@ async def my_agent(ctx: agents.JobContext):
         ),
     )
 
-    @session.on("user_input_transcribed")
-    def on_user_input_transcribed(event: object) -> None:
-        transcript = getattr(event, "transcript", "")
-        is_final = getattr(event, "is_final", False)
-        if is_final and isinstance(transcript, str) and is_shutdown_phrase(transcript):
-            logger.info("Goodbye phrase detected: '%s' — ending session", transcript.strip())
-            # Write stop signal so the background agent supervisor knows
-            # to return to STANDBY (not terminate).
-            STOP_PATH.parent.mkdir(parents=True, exist_ok=True)
-            STOP_PATH.touch()
-            asyncio.create_task(session.shutdown())
-
     await session.generate_reply(
         instructions=Agent_Response
     )
@@ -134,5 +64,4 @@ async def my_agent(ctx: agents.JobContext):
 
 
 if __name__ == "__main__":
-    _start_heartbeat()
     agents.cli.run_app(server)

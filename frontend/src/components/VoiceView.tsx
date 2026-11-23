@@ -182,7 +182,7 @@ export default function VoiceView() {
       {/* Status header */}
       <div style={{ textAlign: "center" }}>
         <div className="eyebrow">
-          <span className="eyebrow-dot" /> LIVE WINDOWS VOICE LINK
+          <span className="eyebrow-dot" /> LIVE VOICE LINK
         </div>
         <h1
           className="voice-title"
@@ -196,7 +196,7 @@ export default function VoiceView() {
           Speak with <span className="gradient-text">JARVIS</span>
         </h1>
         <p style={{ color: "#64748b", fontSize: "0.875rem" }}>
-          Full Windows desktop voice control. Natural speech, tool execution, and verified results.
+          Natural speech, tool execution, and verified results.
         </p>
       </div>
 

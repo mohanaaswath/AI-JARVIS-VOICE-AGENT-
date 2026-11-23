@@ -34,10 +34,6 @@ LiveKit Agents worker (backend/agent.py)
 
 ## Operational limitation
 
-The worker is a separately started process, but it is not yet a complete
-Windows background assistant: it has no wake-word loop, tray lifecycle,
-single-instance guard, or offline speech pipeline.
-
-The worker now writes a short-lived heartbeat under the per-user local
-application-data directory. The backend exposes that heartbeat through
-`GET /api/agent/status`; this reports worker liveness, not wake-word readiness.
+The LiveKit worker is a separately started process. It requires valid LiveKit
+and Google credentials and must be started alongside the backend when voice
+sessions are needed.

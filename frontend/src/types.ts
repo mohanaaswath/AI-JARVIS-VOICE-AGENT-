@@ -88,30 +88,6 @@ export interface HealthStatus {
   livekit: boolean;
 }
 
-export interface AgentStatus {
-  available: boolean;
-  state: "running" | "offline" | "unknown";
-  lifecycle_state?: "standby" | "activating" | "active" | "deactivating" | "paused" | "error" | "shutting_down" | "unknown";
-  reason?: string;
-  age_seconds?: number;
-  agent_name?: string;
-  pid?: number;
-  settings?: AgentSettings;
-  wake_word?: {
-    available: boolean;
-    reason: string;
-    wake_word: string;
-  };
-}
-
-export interface AgentSettings {
-  wake_word_enabled: boolean;
-  microphone_muted: boolean;
-  wake_word_sensitivity: number;
-  conversation_mode: "single" | "continuous";
-  inactivity_timeout_seconds: number;
-}
-
 export type ActionStatus =
   | "pending"
   | "approved"

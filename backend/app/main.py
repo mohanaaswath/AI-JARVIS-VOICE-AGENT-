@@ -11,7 +11,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import PlainTextResponse
 
 from app.config import get_settings
-from app.api import agent, health, livekit, system, activity, approvals, agent_control, chat, search
+from app.api import health, livekit, system, activity, approvals, chat, search
 from app.services.livekit_service import LiveKitService
 
 logging.basicConfig(
@@ -51,7 +51,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="JARVIS AI Assistant API",
-    description="Backend for the JARVIS LiveKit voice assistant and Windows automation control",
+    description="Backend for the JARVIS LiveKit voice assistant and computer automation control",
     version="2.0.0",
     lifespan=lifespan,
 )
@@ -80,8 +80,6 @@ app.add_middleware(
 app.include_router(health.router, prefix="/api")
 app.include_router(chat.router, prefix="/api")
 app.include_router(search.router, prefix="/api")
-app.include_router(agent.router, prefix="/api")
-app.include_router(agent_control.router, prefix="/api")
 app.include_router(livekit.router, prefix="/api")
 app.include_router(system.router, prefix="/api")
 app.include_router(activity.router, prefix="/api")
@@ -101,7 +99,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 @app.get("/", tags=["Root"])
 async def root():
     return {
-        "message": "JARVIS Windows Desktop Voice Assistant backend is running.",
+        "message": "JARVIS voice assistant backend is running.",
         "version": "2.0.0",
         "docs": "/docs",
     }

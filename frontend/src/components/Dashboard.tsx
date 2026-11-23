@@ -13,7 +13,6 @@ import {
   Volume2,
   VolumeX,
   Wifi,
-  Bot,
   Moon,
   Sun,
   ShieldAlert,
@@ -24,17 +23,12 @@ import {
 } from "lucide-react";
 import {
   fetchHealth,
-  fetchAgentStatus,
   fetchSystemStatus,
   fetchActivity,
   fetchPendingApprovals,
   approveAction,
   rejectAction,
   executeAction,
-  activateAgent,
-  deactivateAgent,
-  pauseAgent,
-  resumeAgent,
 } from "../lib/api";
 import type {
   AppView,
@@ -42,7 +36,6 @@ import type {
   SystemStatus,
   ActionResult,
   ApprovalRequest,
-  AgentStatus,
 } from "../types";
 
 interface DashboardProps {
@@ -54,10 +47,6 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
     status: "unknown",
     livekit: false,
   });
-  const [agent, setAgent] = useState<AgentStatus>({
-    available: false,
-    state: "unknown",
-  });
   const [system, setSystem] = useState<SystemStatus | null>(null);
   const [activities, setActivities] = useState<ActionResult[]>([]);
   const [approvals, setApprovals] = useState<ApprovalRequest[]>([]);
@@ -67,9 +56,8 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
 
   const loadData = useCallback(async () => {
     try {
-      const [h, agentResult, systemResult, activityResult, approvalResult] = await Promise.allSettled([
+      const [h, systemResult, activityResult, approvalResult] = await Promise.allSettled([
         fetchHealth(),
-        fetchAgentStatus(),
         fetchSystemStatus(),
         fetchActivity(10),
         fetchPendingApprovals(),
@@ -79,12 +67,6 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
         setHealth({ status: h.value.status, livekit: h.value.livekit });
       } else {
         setHealth({ status: "degraded", livekit: false });
-      }
-
-      if (agentResult.status === "fulfilled") {
-        setAgent(agentResult.value);
-      } else {
-        setAgent({ available: false, state: "unknown", reason: "status_unavailable" });
       }
 
       if (systemResult.status === "fulfilled") {
@@ -145,15 +127,6 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
     }
   };
 
-  const handleAgentControl = async (control: () => Promise<unknown>) => {
-    try {
-      await control();
-      await loadData();
-    } catch (err) {
-      console.error("Background agent control failed:", err);
-    }
-  };
-
   const VERIFICATION_BADGE = {
     verified: { text: "VERIFIED", color: "var(--accent-lime)", bg: "rgba(163,230,53,0.15)" },
     failed: { text: "FAILED", color: "var(--accent-coral)", bg: "rgba(239,68,68,0.15)" },
@@ -189,7 +162,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
       >
         <div>
           <div className="eyebrow">
-            <span className="eyebrow-dot" /> COMMAND CENTER // WINDOWS ASSISTANT
+            <span className="eyebrow-dot" /> COMMAND CENTER // JARVIS
           </div>
           <h1
             style={{
@@ -346,33 +319,6 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
           gap: "1rem",
         }}
       >
-        {/* Local Background Agent Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="glass"
-          style={{ padding: "1.25rem", borderRadius: "0.75rem" }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem" }}>
-            <Bot size={18} color={agent.available ? "var(--accent-lime)" : "var(--accent-coral)"} />
-            <span style={{ fontSize: "0.85rem", color: "#64748b", fontWeight: 500 }}>Background Agent</span>
-          </div>
-          <div style={{ fontSize: "1.3rem", fontWeight: 700, color: "var(--text-primary)" }}>
-            {loading ? "Checking..." : (agent.lifecycle_state ?? (agent.available ? "running" : "offline")).toUpperCase()}
-          </div>
-          <p style={{ fontSize: "0.75rem", color: agent.available ? "var(--accent-lime)" : "var(--accent-coral)", marginTop: "0.25rem" }}>
-            {agent.available
-              ? `Worker ${agent.agent_name ?? "my-agent"} is running`
-              : "Start the Windows background agent to enable commands"}
-          </p>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginTop: "0.75rem" }}>
-            <button type="button" onClick={() => handleAgentControl(activateAgent)} disabled={!agent.available}>Activate</button>
-            <button type="button" onClick={() => handleAgentControl(deactivateAgent)} disabled={!agent.available}>Deactivate</button>
-            <button type="button" onClick={() => handleAgentControl(pauseAgent)} disabled={!agent.available}>Pause</button>
-            <button type="button" onClick={() => handleAgentControl(resumeAgent)} disabled={!agent.available}>Resume</button>
-          </div>
-        </motion.div>
-
         {/* LiveKit Voice Card */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -388,7 +334,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
             {loading ? "Checking..." : health.livekit ? "Connected" : "Standby"}
           </div>
           <p style={{ fontSize: "0.75rem", color: health.livekit ? "var(--accent-lime)" : "var(--accent-coral)", marginTop: "0.25rem" }}>
-            {health.livekit ? "Ready for voice commands" : "Voice worker offline"}
+            {health.livekit ? "Ready for voice commands" : "Voice service offline"}
           </p>
         </motion.div>
 

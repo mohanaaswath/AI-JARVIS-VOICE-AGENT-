@@ -14,7 +14,7 @@
 - The repository has focused pytest coverage for permissions, files,
   applications, settings, volume, activity, schemas, and LiveKit tools.
 - The current browser voice session depends on the worker process. Closing the
-  browser does not stop that worker, but no independent wake-word agent exists.
+  browser does not stop that worker.
 
 ## Working features
 
@@ -26,19 +26,16 @@
 - Volume and dark-mode controls with verification.
 - Approval lifecycle for higher-risk backend actions.
 - Activity history and dashboard polling.
-- Windows launcher batch files.
+- Windows launcher batch file.
 
 ## Gaps and risks
 
-- There is no independent background process with tray UI, wake word, offline
-  speech recognition, or local text-to-speech.
 - Website aliases and validated HTTP(S) opening are implemented; full
   Playwright tab/form automation is not implemented.
 - File operations are currently narrower than the requested create, move,
   copy, rename, search, and PDF workflows.
 - Application control is an allowlist, not installed-application discovery or
   window management.
-- The dashboard has no authenticated local-agent channel or WebSocket.
 - The current in-memory approval and activity stores are lost on restart.
 - The frontend uses a Vite proxy in development; production API routing and
   CORS must be configured explicitly.
@@ -48,7 +45,6 @@
 ## Conclusion
 
 The existing project is a working LiveKit voice-control prototype with useful
-security primitives. It is not yet an always-available Windows desktop
-assistant. The safest migration is incremental: preserve the LiveKit path,
-add a local agent boundary, then add offline wake word, speech, tools, and
-dashboard integration behind the existing permission and verification layers.
+security primitives. Voice sessions are intentionally browser- and
+cloud-mediated; Windows automation remains behind the permission and
+verification layers.

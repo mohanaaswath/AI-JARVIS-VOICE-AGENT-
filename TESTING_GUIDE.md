@@ -17,7 +17,6 @@ Pop-Location
 - Assistant audio on the selected Windows output device.
 - Worker restart and duplicate-worker behavior.
 - Start-after-sign-in behavior.
-- Wake-word false activation and mute behavior.
 - File operations in temporary directories.
 - Browser confirmation flows.
 - Dashboard reconnection after the worker or browser restarts.

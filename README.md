@@ -50,10 +50,8 @@ Generated/local directories such as `venv`, `frontend/node_modules`, and
 3. FastAPI reads LiveKit credentials from environment variables and issues a
    short-lived token at `POST /api/livekit/token`.
 4. The browser connects to LiveKit Cloud using that token.
-5. The local supervisor listens offline for “Hello Jarvis” and speaks a short greeting when detected.
-6. The LiveKit agent worker joins the room as `my-agent` and uses Google
+5. The LiveKit agent worker joins the room as `my-agent` and uses Google
    Realtime Voice to converse with the user.
-7. Saying “OK Jarvis, bye” ends the active voice session and stops the worker.
 
 ## Requirements
 
@@ -103,7 +101,7 @@ backend credentials in frontend code or GitHub Pages build secrets.
 
 ## Run the application
 
-### One-click Windows startup
+### One-click startup
 
 Double-click `start-jarvis.bat`. It starts:
 
