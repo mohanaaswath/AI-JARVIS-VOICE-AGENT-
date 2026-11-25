@@ -1,14 +1,21 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Mic,
+  MessageSquare,
   LayoutDashboard,
+  FileText,
+  CheckSquare,
   Settings,
   ChevronLeft,
   ChevronRight,
   Zap,
+  Download,
+  Wifi,
+  WifiOff,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { AppView } from "../types";
+import { useNetworkStatus } from "../lib/network";
 
 interface SidebarProps {
   currentView: AppView;
@@ -18,8 +25,11 @@ interface SidebarProps {
 }
 
 const NAV_ITEMS: { id: AppView; label: string; icon: React.ReactNode }[] = [
+  { id: "voice", label: "Voice Assistant", icon: <Mic size={18} /> },
+  { id: "chat", label: "AI Chat", icon: <MessageSquare size={18} /> },
   { id: "dashboard", label: "Dashboard", icon: <LayoutDashboard size={18} /> },
-  { id: "voice", label: "Voice", icon: <Mic size={18} /> },
+  { id: "notes", label: "Notes", icon: <FileText size={18} /> },
+  { id: "tasks", label: "Tasks", icon: <CheckSquare size={18} /> },
   { id: "settings", label: "Settings", icon: <Settings size={18} /> },
 ];
 
@@ -29,6 +39,33 @@ export default function Sidebar({
   collapsed,
   onToggleCollapse,
 }: SidebarProps) {
+  const { isOnline } = useNetworkStatus();
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [canInstall, setCanInstall] = useState(false);
+
+  useEffect(() => {
+    const handleBeforeInstall = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setCanInstall(true);
+    };
+
+    window.addEventListener("beforeinstallprompt", handleBeforeInstall);
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handleBeforeInstall);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === "accepted") {
+      setCanInstall(false);
+    }
+    setDeferredPrompt(null);
+  };
+
   return (
     <motion.aside
       className="app-sidebar"
@@ -44,7 +81,7 @@ export default function Sidebar({
         flexShrink: 0,
       }}
     >
-      {/* Logo */}
+      {/* Brand Header */}
       <div
         className="sidebar-brand"
         style={{
@@ -60,14 +97,15 @@ export default function Sidebar({
             width: 36,
             height: 36,
             borderRadius: "50%",
-            background: "linear-gradient(135deg,var(--accent-lime),var(--accent-purple))",
+            background: "linear-gradient(135deg, var(--accent-cyan), var(--accent-blue))",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             flexShrink: 0,
+            boxShadow: "0 0 12px rgba(103, 232, 249, 0.4)",
           }}
         >
-          <Zap size={18} color="white" />
+          <Zap size={18} color="#08090d" />
         </div>
         <AnimatePresence>
           {!collapsed && (
@@ -78,14 +116,15 @@ export default function Sidebar({
               transition={{ duration: 0.15 }}
               style={{
                 fontSize: "1.1rem",
-                fontWeight: 700,
-                background: "linear-gradient(135deg,var(--accent-lime),var(--accent-purple))",
+                fontWeight: 800,
+                letterSpacing: "-0.03em",
+                background: "linear-gradient(135deg, var(--accent-cyan), #ffffff)",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
                 whiteSpace: "nowrap",
               }}
             >
-              JARVIS<span style={{ color: "var(--accent-cyan)" }}>//</span>AI
+              JARVIS<span style={{ color: "var(--accent-purple)" }}>//</span>PWA
             </motion.span>
           )}
         </AnimatePresence>
@@ -98,7 +137,6 @@ export default function Sidebar({
           return (
             <button
               key={item.id}
-              className={`sidebar-item${active ? " active" : ""}`}
               onClick={() => onViewChange(item.id)}
               style={{
                 width: "100%",
@@ -108,33 +146,23 @@ export default function Sidebar({
                 padding: collapsed ? "0.75rem" : "0.75rem 0.875rem",
                 justifyContent: collapsed ? "center" : "flex-start",
                 background: active ? "var(--nav-active)" : "transparent",
-                borderLeft: active ? "2px solid var(--accent-lime)" : "2px solid transparent",
+                borderLeft: active ? "3px solid var(--accent-cyan)" : "3px solid transparent",
                 borderTop: "none",
                 borderRight: "none",
                 borderBottom: "none",
                 borderRadius: "0 0.5rem 0.5rem 0",
-                color: active ? "var(--text-primary)" : "var(--text-secondary)",
+                color: active ? "var(--accent-cyan)" : "var(--text-secondary)",
                 cursor: "pointer",
                 fontSize: "0.875rem",
                 fontWeight: active ? 600 : 400,
                 marginBottom: "0.25rem",
                 transition: "all 0.15s",
               }}
-              onMouseEnter={(e) => {
-                if (!active)
-                  (e.currentTarget as HTMLButtonElement).style.color = "var(--text-primary)";
-              }}
-              onMouseLeave={(e) => {
-                if (!active)
-                  (e.currentTarget as HTMLButtonElement).style.color = "var(--text-secondary)";
-              }}
-              title={collapsed ? item.label : undefined}
             >
               {item.icon}
               <AnimatePresence>
                 {!collapsed && (
                   <motion.span
-                    className="sidebar-label"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
@@ -149,28 +177,71 @@ export default function Sidebar({
         })}
       </nav>
 
-      {/* Collapse toggle */}
+      {/* Bottom Status & Install PWA */}
+      <div style={{ padding: "0.75rem", borderTop: "1px solid var(--border)" }}>
+        {canInstall && !collapsed && (
+          <button
+            onClick={handleInstallClick}
+            style={{
+              width: "100%",
+              padding: "0.5rem",
+              borderRadius: "0.5rem",
+              background: "linear-gradient(135deg, var(--accent-cyan), var(--accent-blue))",
+              color: "#08090d",
+              fontWeight: 700,
+              fontSize: "0.8rem",
+              border: "none",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "0.4rem",
+              marginBottom: "0.5rem",
+            }}
+          >
+            <Download size={14} /> Install PWA
+          </button>
+        )}
+
+        {/* Online/Offline indicator */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.5rem",
+            justifyContent: collapsed ? "center" : "flex-start",
+            padding: "0.25rem",
+            fontSize: "0.75rem",
+            color: isOnline ? "var(--accent-cyan)" : "var(--accent-coral)",
+          }}
+        >
+          {isOnline ? <Wifi size={14} /> : <WifiOff size={14} />}
+          {!collapsed && <span>{isOnline ? "Online Connected" : "Offline Storage"}</span>}
+        </div>
+      </div>
+
+      {/* Collapse Toggle Button */}
       <button
-        className="sidebar-toggle"
         onClick={onToggleCollapse}
         style={{
           position: "absolute",
           top: "1.25rem",
-          right: 8,
-          width: 24,
-          height: 24,
+          right: -14,
+          width: 28,
+          height: 28,
           borderRadius: "50%",
           background: "var(--bg-surface)",
           border: "1px solid var(--border)",
-          color: "var(--accent-lime)",
-          cursor: "pointer",
+          color: "var(--text-secondary)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          zIndex: 10,
+          cursor: "pointer",
+          zIndex: 50,
+          boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
         }}
       >
-        {collapsed ? <ChevronRight size={12} /> : <ChevronLeft size={12} />}
+        {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
       </button>
     </motion.aside>
   );

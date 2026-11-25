@@ -1,440 +1,435 @@
 import { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { PhoneOff, Phone, AlertCircle, Wrench, CheckCircle2, XCircle } from "lucide-react";
+import { motion } from "framer-motion";
+import {
+  Mic,
+  MicOff,
+  Radio,
+  Sparkles,
+} from "lucide-react";
+import ArcReactor from "./ArcReactor";
+import { voiceEngine, type VoiceEngineStatus } from "../lib/voice";
+import { AssistantOrchestrator } from "../lib/assistant";
+import { getPreferences, saveMessage, getMessages } from "../lib/storage";
+import { useNetworkStatus } from "../lib/network";
+import type { ChatMessage, UserPreferences } from "../types";
+import { fetchLiveKitStatus, fetchLiveKitToken } from "../lib/api";
 import { Room, RoomEvent, Track } from "livekit-client";
-import { fetchLiveKitToken, fetchLiveKitStatus, fetchActivity } from "../lib/api";
-import type { ActionResult } from "../types";
 
-type VoiceState =
-  | "idle"
-  | "connecting"
-  | "connected"
-  | "listening"
-  | "executing"
-  | "speaking"
-  | "error";
+type AssistantState = "idle" | "listening" | "processing" | "speaking" | "error";
 
 export default function VoiceView() {
-  const [voiceState, setVoiceState] = useState<VoiceState>("idle");
-  const [error, setError] = useState<string | null>(null);
-  const [lkConfigured, setLkConfigured] = useState<boolean | null>(null);
-  const [statusMsg, setStatusMsg] = useState("Ready to connect");
-  const [recentAction, setRecentAction] = useState<ActionResult | null>(null);
+  const { isOnline } = useNetworkStatus();
+  const [engineState, setEngineState] = useState<AssistantState>("idle");
+  const [audioVolume, setAudioVolume] = useState(0);
+  const [transcript, setTranscript] = useState("");
+  const [interimText, setInterimText] = useState("");
+  const [assistantResponse, setAssistantResponse] = useState(
+    "Hello! I am JARVIS, your browser voice assistant. How may I assist you today?"
+  );
+  const [prefs, setPrefs] = useState<UserPreferences | null>(null);
+  const [conversationId] = useState<string>(() => crypto.randomUUID());
+  const [lkConfigured, setLkConfigured] = useState<boolean>(false);
+  const [lkConnected, setLkConnected] = useState<boolean>(false);
+
   const roomRef = useRef<Room | null>(null);
-  const lastActionIdRef = useRef<string | null>(null);
 
   useEffect(() => {
+    getPreferences().then((p) => {
+      setPrefs(p);
+      voiceEngine.updateSettings(p.voice);
+    });
+
     fetchLiveKitStatus()
-      .then((s) => {
-        setLkConfigured(s.configured);
-      })
+      .then((s) => setLkConfigured(s.configured))
       .catch(() => setLkConfigured(false));
-  }, []);
 
-  useEffect(() => {
+    // Connect voiceEngine callbacks
+    voiceEngine.onVolumeChange((vol) => {
+      setAudioVolume(vol);
+    });
+
+    voiceEngine.onStateChange((status: VoiceEngineStatus) => {
+      if (status.isSpeaking) {
+        setEngineState("speaking");
+      } else if (status.isListening) {
+        setEngineState("listening");
+      } else if (status.error) {
+        setEngineState("error");
+      } else {
+        setEngineState("idle");
+      }
+    });
+
+    voiceEngine.onTranscript((text, isFinal) => {
+      if (isFinal) {
+        setTranscript(text);
+        setInterimText("");
+        handleVoiceQuery(text);
+      } else {
+        setInterimText(text);
+      }
+    });
+
     return () => {
+      voiceEngine.stopListening();
+      voiceEngine.stopSpeaking();
       roomRef.current?.disconnect();
     };
   }, []);
 
-  // Poll recent activity while connected to show real-time tool execution
-  useEffect(() => {
-    if (voiceState === "idle" || voiceState === "error") return;
+  const handleVoiceQuery = async (queryText: string) => {
+    if (!queryText.trim() || !prefs) return;
 
-    const interval = setInterval(async () => {
-      try {
-        const acts = await fetchActivity(1);
-        if (acts.length > 0) {
-          const latest = acts[0];
-          if (latest.action_id !== lastActionIdRef.current) {
-            lastActionIdRef.current = latest.action_id;
-            setRecentAction(latest);
-            // Flash executing state briefly if active
-            if (voiceState === "listening") {
-              setVoiceState("executing");
-              setStatusMsg(`Executed ${latest.action_name}`);
-              setTimeout(() => {
-                if (roomRef.current) {
-                  setVoiceState("listening");
-                  setStatusMsg("Listening…");
-                }
-              }, 2500);
-            }
-          }
-        }
-      } catch {
-        // Ignore activity fetch errors during call
+    setEngineState("processing");
+
+    // Save user message to IndexedDB
+    const userMsg: ChatMessage = {
+      id: crypto.randomUUID(),
+      conversationId,
+      role: "user",
+      content: queryText,
+      timestamp: Date.now(),
+    };
+    await saveMessage(userMsg);
+
+    const history = await getMessages(conversationId);
+
+    const result = await AssistantOrchestrator.processMessage(
+      queryText,
+      history,
+      isOnline,
+      prefs
+    );
+
+    setAssistantResponse(result.reply);
+
+    // Save assistant message to IndexedDB
+    const assistantMsg: ChatMessage = {
+      id: crypto.randomUUID(),
+      conversationId,
+      role: "assistant",
+      content: result.reply,
+      timestamp: Date.now(),
+      isOffline: result.isOffline,
+    };
+    await saveMessage(assistantMsg);
+
+    // Speak response
+    await voiceEngine.speak(result.reply);
+  };
+
+  const toggleMic = async () => {
+    if (engineState === "speaking") {
+      voiceEngine.stopSpeaking();
+      return;
+    }
+
+    if (engineState === "listening") {
+      voiceEngine.stopListening();
+      setEngineState("idle");
+    } else {
+      voiceEngine.stopSpeaking();
+      setTranscript("");
+      setInterimText("");
+      const success = await voiceEngine.startListening();
+      if (success) {
+        setEngineState("listening");
       }
-    }, 2000);
+    }
+  };
 
-    return () => clearInterval(interval);
-  }, [voiceState]);
+  const triggerPrompt = (prompt: string) => {
+    setTranscript(prompt);
+    handleVoiceQuery(prompt);
+  };
 
-  const startSession = async () => {
-    setError(null);
-    lastActionIdRef.current = null;
-    setVoiceState("connecting");
-    setStatusMsg("Connecting to voice agent…");
+  // Optional LiveKit mode
+  const toggleLiveKitSession = async () => {
+    if (lkConnected) {
+      roomRef.current?.disconnect();
+      setLkConnected(false);
+      setEngineState("idle");
+      return;
+    }
 
     try {
+      setEngineState("processing");
       const roomName = `jarvis-${Date.now()}`;
       const identity = `user-${crypto.randomUUID().slice(0, 8)}`;
       const { token, url } = await fetchLiveKitToken(roomName, identity);
       const room = new Room();
       roomRef.current = room;
-      let isConnected = false;
 
       room.on(RoomEvent.TrackSubscribed, (track) => {
         if (track.kind === Track.Kind.Audio) {
           const audioElement = track.attach();
-          audioElement.autoplay = true;
-          audioElement.style.display = "none";
           document.body.appendChild(audioElement);
-          audioElement.play().catch((playError: unknown) => {
-            const message = playError instanceof Error ? playError.message : "Audio playback was blocked";
-            setError(`Assistant audio could not play: ${message}`);
-            setVoiceState("error");
-            setStatusMsg("Audio playback failed");
-          });
-          setVoiceState("speaking");
-          setStatusMsg("Assistant is speaking");
+          audioElement.play().catch(() => {});
+          setEngineState("speaking");
         }
-      });
-
-      room.on(RoomEvent.TrackUnsubscribed, (track) => {
-        track.detach().forEach((element) => element.remove());
-        if (isConnected) {
-          setVoiceState("listening");
-          setStatusMsg("Listening…");
-        }
-      });
-
-      room.on(RoomEvent.ActiveSpeakersChanged, (speakers) => {
-        if (speakers.some((speaker) => speaker.identity !== identity)) {
-          setVoiceState("speaking");
-          setStatusMsg("Assistant is speaking");
-        } else if (isConnected) {
-          setVoiceState("listening");
-          setStatusMsg("Listening…");
-        }
-      });
-
-      room.on(RoomEvent.Disconnected, () => {
-        roomRef.current = null;
-        setVoiceState("idle");
-        setStatusMsg("Session ended");
       });
 
       await room.connect(url, token);
-      isConnected = true;
       await room.localParticipant.setMicrophoneEnabled(true);
-      setVoiceState("listening");
-      setStatusMsg("Listening…");
-    } catch (err: unknown) {
-      roomRef.current?.disconnect();
-      roomRef.current = null;
-      const msg = err instanceof Error ? err.message : "Connection failed";
-      if (msg.includes("Permission denied") || msg.includes("NotAllowedError")) {
-        setError("Microphone access denied. Please allow microphone permission in your browser and try again.");
-      } else {
-        setError(`Unable to start the voice session: ${msg}`);
-      }
-      setVoiceState("error");
-      setStatusMsg("Connection failed");
+      setLkConnected(true);
+      setEngineState("listening");
+    } catch (e: any) {
+      setEngineState("error");
+      setAssistantResponse(`LiveKit connection failed: ${e.message}`);
     }
   };
 
-  const endSession = () => {
-    roomRef.current?.disconnect();
-    roomRef.current = null;
-    setVoiceState("idle");
-    setStatusMsg("Session ended");
-    setError(null);
-  };
-
-  const STATE_COLORS: Record<VoiceState, string> = {
-    idle: "#818797",
-    connecting: "#ff8066",
-    connected: "#67e8f9",
-    listening: "#67e8f9",
-    executing: "var(--accent-lime)",
-    speaking: "#a78bfa",
-    error: "#ff8066",
-  };
-
-  const color = STATE_COLORS[voiceState];
-
   return (
     <div
-      className="voice-page"
       style={{
         display: "flex",
         flexDirection: "column",
-        height: "100%",
         alignItems: "center",
-        justifyContent: "center",
-        padding: "2rem",
-        gap: "1.5rem",
-        maxWidth: 720,
+        justifyContent: "space-between",
+        minHeight: "100%",
+        padding: "2rem 1.5rem",
+        position: "relative",
+        maxWidth: 900,
         margin: "0 auto",
+        width: "100%",
       }}
     >
-      {/* Status header */}
-      <div style={{ textAlign: "center" }}>
-        <div className="eyebrow">
-          <span className="eyebrow-dot" /> LIVE VOICE LINK
-        </div>
-        <h1
-          className="voice-title"
-          style={{
-            fontSize: "clamp(1.5rem, 3vw, 2.25rem)",
-            fontWeight: 800,
-            color: "var(--text-primary)",
-            marginBottom: "0.5rem",
-          }}
-        >
-          Speak with <span className="gradient-text">JARVIS</span>
-        </h1>
-        <p style={{ color: "#64748b", fontSize: "0.875rem" }}>
-          Natural speech, tool execution, and verified results.
-        </p>
-      </div>
-
-      {lkConfigured === false && (
-        <div
-          style={{
-            padding: "0.5rem 1rem",
-            background: "rgba(245,158,11,0.1)",
-            border: "1px solid rgba(245,158,11,0.3)",
-            borderRadius: "0.5rem",
-            color: "var(--accent-coral)",
-            fontSize: "0.8rem",
-            display: "flex",
-            alignItems: "center",
-            gap: "0.5rem",
-          }}
-        >
-          <AlertCircle size={14} />
-          Voice credentials incomplete. Ensure LIVEKIT_URL, LIVEKIT_API_KEY, and GOOGLE_API_KEY are configured in frontend/.env.
-        </div>
-      )}
-
-      {/* Main orb */}
-      <div style={{ position: "relative" }}>
-        {(voiceState === "connected" ||
-          voiceState === "listening" ||
-          voiceState === "executing" ||
-          voiceState === "speaking") && (
-          <>
-            {[1, 2, 3].map((i) => (
-              <motion.div
-                key={i}
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  borderRadius: "50%",
-                  border: `2px solid ${color}`,
-                }}
-                animate={{ scale: 1 + i * 0.35, opacity: 0 }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  delay: i * 0.4,
-                  ease: "easeOut",
-                }}
-              />
-            ))}
-          </>
-        )}
-
-        {/* Assistant avatar */}
-        <motion.div
-          animate={{
-            scale: voiceState === "speaking" ? [1, 1.05, 1] : 1,
-            boxShadow:
-              voiceState === "idle"
-                ? `0 0 30px ${color}33`
-                : `0 0 60px ${color}66`,
-          }}
-          transition={{ duration: 1, repeat: voiceState === "speaking" ? Infinity : 0 }}
-          style={{
-            width: 140,
-            height: 140,
-            borderRadius: "50%",
-            border: `2px solid ${color}66`,
-            overflow: "hidden",
-            position: "relative",
-            zIndex: 1,
-            background: "#0f172a",
-          }}
-        >
-          <img
-            src={`${import.meta.env.BASE_URL}Jarvis%20image.jpg`}
-            alt="JARVIS assistant"
+      {/* Top Status Bar */}
+      <div
+        className="glass"
+        style={{
+          width: "100%",
+          padding: "0.75rem 1.25rem",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+          <div
             style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              display: "block",
+              width: 10,
+              height: 10,
+              borderRadius: "50%",
+              background: isOnline ? "var(--accent-cyan)" : "var(--accent-coral)",
+              boxShadow: `0 0 10px ${isOnline ? "var(--accent-cyan)" : "var(--accent-coral)"}`,
             }}
           />
-          {voiceState === "connecting" && (
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--text-primary)" }}>
+            {isOnline ? "Online Cloud Ready" : "Offline Local Mode"}
+          </span>
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+          {lkConfigured && (
+            <button
+              onClick={toggleLiveKitSession}
               style={{
-                position: "absolute",
-                inset: 44,
-                border: "3px solid rgba(255,255,255,0.3)",
-                borderTopColor: "#fff",
-                borderRadius: "50%",
+                background: lkConnected ? "rgba(103,232,249,0.2)" : "transparent",
+                border: "1px solid var(--border)",
+                borderRadius: "0.5rem",
+                padding: "0.35rem 0.75rem",
+                fontSize: "0.8rem",
+                color: lkConnected ? "var(--accent-cyan)" : "var(--text-secondary)",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: "0.4rem",
               }}
-            />
+            >
+              <Radio size={14} />
+              {lkConnected ? "LiveKit Active" : "Connect LiveKit"}
+            </button>
           )}
+
+          <span
+            style={{
+              fontSize: "0.8rem",
+              color: "var(--text-secondary)",
+              textTransform: "uppercase",
+              letterSpacing: "0.08em",
+            }}
+          >
+            STATE: {engineState}
+          </span>
+        </div>
+      </div>
+
+      {/* Central Animated Arc Reactor */}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          margin: "2.5rem 0",
+        }}
+      >
+        <ArcReactor
+          state={engineState}
+          volume={audioVolume}
+          size={250}
+          onClick={toggleMic}
+        />
+
+        <motion.div
+          animate={{ opacity: [0.7, 1, 0.7] }}
+          transition={{ duration: 2, repeat: Infinity }}
+          style={{
+            marginTop: "1.5rem",
+            fontSize: "0.9rem",
+            fontWeight: 600,
+            letterSpacing: "0.1em",
+            color:
+              engineState === "listening"
+                ? "var(--accent-cyan)"
+                : engineState === "speaking"
+                ? "var(--accent-purple)"
+                : "var(--text-secondary)",
+            textTransform: "uppercase",
+          }}
+        >
+          {engineState === "listening"
+            ? "JARVIS is Listening..."
+            : engineState === "speaking"
+            ? "JARVIS is Speaking (Tap to Interrupt)"
+            : engineState === "processing"
+            ? "Analyzing..."
+            : "Tap Microphone to Speak"}
         </motion.div>
       </div>
 
-      {/* Status label */}
-      <div style={{ textAlign: "center" }}>
-        <div
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "0.5rem",
-            padding: "0.375rem 0.875rem",
-            background: `${color}11`,
-            border: `1px solid ${color}33`,
-            borderRadius: "2rem",
-            marginBottom: "0.5rem",
-          }}
-        >
-          <div
-            style={{
-              width: 8,
-              height: 8,
-              borderRadius: "50%",
-              background: color,
-              boxShadow: `0 0 8px ${color}`,
-            }}
-          />
-          <span style={{ color, fontSize: "0.85rem", fontWeight: 500 }}>
-            {voiceState === "executing"
-              ? "Executing Windows Tool"
-              : voiceState.charAt(0).toUpperCase() + voiceState.slice(1)}
-          </span>
-        </div>
-        <p style={{ color: "#64748b", fontSize: "0.85rem" }}>{statusMsg}</p>
-      </div>
-
-      {/* Live Tool Execution Feedback Badge */}
-      <AnimatePresence>
-        {recentAction && (
+      {/* Dialogue Feedback Cards */}
+      <div
+        style={{
+          width: "100%",
+          display: "flex",
+          flexDirection: "column",
+          gap: "1rem",
+          marginBottom: "1.5rem",
+        }}
+      >
+        {/* Real-time User Transcript */}
+        {(transcript || interimText) && (
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
             className="glass"
             style={{
-              padding: "0.6rem 1rem",
-              borderRadius: "0.5rem",
-              display: "flex",
-              alignItems: "center",
-              gap: "0.5rem",
-              border: "1px solid var(--border)",
-              fontSize: "0.8rem",
-              maxWidth: 480,
+              padding: "1rem 1.25rem",
+              borderLeft: "3px solid var(--accent-cyan)",
             }}
           >
-            <Wrench size={14} color="var(--accent-lime)" />
-            <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>
-              {recentAction.action_name}:
+            <div style={{ fontSize: "0.75rem", color: "var(--accent-cyan)", fontWeight: 600, marginBottom: "0.25rem" }}>
+              YOU SAID
+            </div>
+            <p style={{ color: "var(--text-primary)", fontSize: "1rem" }}>
+              {transcript} {interimText && <span style={{ opacity: 0.6 }}>{interimText}</span>}
+            </p>
+          </motion.div>
+        )}
+
+        {/* Assistant Spoken Response */}
+        <motion.div
+          className="glass"
+          style={{
+            padding: "1.25rem 1.5rem",
+            borderLeft: "3px solid var(--accent-purple)",
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.35rem" }}>
+            <span style={{ fontSize: "0.75rem", color: "var(--accent-purple)", fontWeight: 600, display: "flex", alignItems: "center", gap: "0.4rem" }}>
+              <Sparkles size={14} /> JARVIS RESPONSE
             </span>
-            <span style={{ color: "#94a3b8", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              {recentAction.message}
-            </span>
-            {recentAction.verification_status === "verified" ? (
-              <CheckCircle2 size={14} color="var(--accent-lime)" />
-            ) : (
-              <XCircle size={14} color="var(--accent-coral)" />
+            {engineState === "speaking" && (
+              <button
+                onClick={() => voiceEngine.stopSpeaking()}
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  color: "var(--accent-coral)",
+                  fontSize: "0.75rem",
+                  cursor: "pointer",
+                }}
+              >
+                Interrupt
+              </button>
             )}
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </div>
+          <p style={{ color: "var(--text-primary)", fontSize: "1.05rem", lineHeight: 1.6 }}>
+            {assistantResponse}
+          </p>
+        </motion.div>
+      </div>
 
-      {/* Error message */}
-      <AnimatePresence>
-        {error && (
-          <motion.div
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
+      {/* Suggested Quick Interaction Chips */}
+      <div
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: "0.5rem",
+          justifyContent: "center",
+          marginBottom: "1.5rem",
+        }}
+      >
+        {[
+          "Explain artificial intelligence",
+          "Save this in my notes",
+          "Add task: Review presentation",
+          "Search Google for latest tech news",
+          "Open YouTube",
+        ].map((prompt) => (
+          <button
+            key={prompt}
+            onClick={() => triggerPrompt(prompt)}
+            className="glass"
             style={{
-              padding: "0.875rem 1rem",
-              background: "rgba(255,128,102,0.1)",
-              border: "1px solid rgba(255,128,102,0.3)",
-              borderRadius: "0.75rem",
-              color: "var(--accent-coral)",
-              fontSize: "0.85rem",
-              maxWidth: 480,
-              textAlign: "center",
-              display: "flex",
-              alignItems: "center",
-              gap: "0.5rem",
-            }}
-          >
-            <AlertCircle size={16} />
-            {error}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Controls */}
-      <div style={{ display: "flex", gap: "1rem" }}>
-        {voiceState === "idle" || voiceState === "error" ? (
-          <motion.button
-            id="start-voice-btn"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={startSession}
-            disabled={lkConfigured === false}
-            className="btn-glow"
-            style={{
-              padding: "0.875rem 2rem",
-              display: "flex",
-              alignItems: "center",
-              gap: "0.5rem",
-              fontSize: "0.95rem",
-              opacity: lkConfigured === false ? 0.4 : 1,
-              cursor: lkConfigured === false ? "not-allowed" : "pointer",
-            }}
-          >
-            <Phone size={18} />
-            Start Voice Session
-          </motion.button>
-        ) : (
-          <motion.button
-            id="end-voice-btn"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={endSession}
-            style={{
-              padding: "0.875rem 2rem",
-              display: "flex",
-              alignItems: "center",
-              gap: "0.5rem",
-              fontSize: "0.95rem",
-              background: "rgba(255,128,102,0.15)",
-              border: "1px solid rgba(255,128,102,0.4)",
-              borderRadius: "0.75rem",
-              color: "var(--accent-coral)",
+              padding: "0.4rem 0.9rem",
+              borderRadius: "1rem",
+              fontSize: "0.8rem",
+              color: "var(--text-secondary)",
               cursor: "pointer",
-              fontWeight: 600,
+              transition: "all 0.2s",
+              border: "1px solid var(--border)",
             }}
           >
-            <PhoneOff size={18} />
-            End Session
-          </motion.button>
-        )}
+            {prompt}
+          </button>
+        ))}
+      </div>
+
+      {/* Primary Interaction Controls Dock */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "1.25rem",
+        }}
+      >
+        <button
+          onClick={toggleMic}
+          style={{
+            width: 72,
+            height: 72,
+            borderRadius: "50%",
+            background:
+              engineState === "listening"
+                ? "linear-gradient(135deg, var(--accent-coral), #dc2626)"
+                : "linear-gradient(135deg, var(--accent-cyan), var(--accent-blue))",
+            border: "none",
+            color: engineState === "listening" ? "#ffffff" : "#08090d",
+            boxShadow:
+              engineState === "listening"
+                ? "0 0 30px rgba(248, 113, 113, 0.6)"
+                : "0 0 30px rgba(103, 232, 249, 0.4)",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            transition: "all 0.25s",
+          }}
+        >
+          {engineState === "listening" ? <MicOff size={32} /> : <Mic size={32} />}
+        </button>
       </div>
     </div>
   );

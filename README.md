@@ -1,178 +1,80 @@
-# JARVIS AI Voice Agent
+# AI JARVIS – Browser-Based Offline & Online Voice Assistant (PWA)
 
-JARVIS is a full-stack voice assistant application. It combines a React/Vite
-web interface, a FastAPI backend that issues LiveKit access tokens, and a
-LiveKit Agents worker powered by Google Realtime Voice.
+A modern, intelligent, browser-based AI assistant operating seamlessly across **Online** and **Offline** modes. Built as a Progressive Web App (PWA) installable on desktop, laptop, tablet, and mobile devices.
 
-## Project layout
+---
 
-```text
-JARVISE/
-├── backend/
-│   ├── agent.py                    LiveKit voice-agent worker
-│   ├── prompt.py                   Shared agent instructions and greeting
-│   ├── requirements.txt            Backend API dependencies
-│   └── app/
-│       ├── main.py                 FastAPI application and CORS setup
-│       ├── config.py               Environment-based settings
-│       ├── api/
-│       │   ├── health.py           GET /api/health
-│       │   └── livekit.py          LiveKit token and status endpoints
-│       ├── schemas/voice.py        Pydantic request/response models
-│       └── services/livekit_service.py
-│                                     LiveKit JWT generation
-├── frontend/
-│   ├── src/
-│   │   ├── App.tsx                 Main view and navigation shell
-│   │   ├── components/             Dashboard, voice, sidebar, settings
-│   │   └── lib/api.ts              Backend API client
-│   ├── .env.example                Environment template
-│   ├── package.json                Frontend scripts and dependencies
-│   └── vite.config.ts              Vite dev server and API proxy
-├── start-jarvis.bat                Windows one-click launcher
-├── requirements.txt                Legacy/shared voice-agent requirements
-└── .gitignore
+## 🌟 Key Features
+
+### 1. Dual Operating Modes
+- **Online Mode**:
+  - Connects to Cloud AI models (Google Gemini, OpenAI GPT-4o, Anthropic Claude).
+  - Real-time web search integration via DuckDuckGo & live scraping tool proxy.
+  - Contextual conversations and smart reasoning.
+  - Natural speech synthesis and voice-to-text.
+- **Offline Mode**:
+  - Instant loading and caching through PWA **Service Worker** (`sw.js`).
+  - Persistent offline storage in **IndexedDB** (`jarvis_offline_db`) for conversations, chat history, notes, tasks, and user preferences.
+  - Browser-native speech synthesis (`SpeechSynthesis`) and speech recognition (`Web Speech API`).
+  - Seamless offline note-taking and task reminders.
+  - Automatic network state detection (`online` / `offline` events) with real-time UI indicator.
+
+### 2. Browser Voice Assistant & Interactive Arc Reactor
+- Central animated futuristic **Arc Reactor** with audio-reactive energy pulses.
+- Push-to-talk & continuous voice capture.
+- Real-time user transcript rendering.
+- Speech interruption: tap or speak to interrupt the assistant immediately.
+- Configurable voices, speech rate, pitch, and auto-speak toggle in Settings.
+
+### 3. Integrated Assistant Tools & Productivity Hub
+- **Voice-to-Notes**: Say *"Save this explanation in my notes"* to automatically extract and save notes to IndexedDB.
+- **Task Tracker**: Say *"Add task finish project review"* to create and track to-do items.
+- **Browser Actions**: Safe user-directed web navigation (e.g. *"Open YouTube"*, *"Search Google for..."*).
+- **Export & Import**: Download all saved data as JSON or restore backups anytime.
+
+---
+
+## 🚀 Running the Application
+
+### Option A: One-Click Silent Web Launch (No CMD Window)
+Double-click `start-jarvis.bat`.
+It starts the FastAPI backend and Vite frontend silently in the background without popping up visible command prompt windows, and automatically opens:
+```
+http://localhost:5173
 ```
 
-Architecture and staged implementation details are documented in
-[PROJECT_ANALYSIS.md](PROJECT_ANALYSIS.md),
-[CURRENT_ARCHITECTURE.md](CURRENT_ARCHITECTURE.md),
-[TARGET_ARCHITECTURE.md](TARGET_ARCHITECTURE.md), and
-[IMPLEMENTATION_ROADMAP.md](IMPLEMENTATION_ROADMAP.md).
+### Option B: Stop Background Services
+Double-click `stop-jarvis.bat` to terminate all background JARVIS processes cleanly.
 
-Generated/local directories such as `venv`, `frontend/node_modules`, and
-`frontend/dist` are not source files and are ignored by Git.
+### Option C: Manual Launch
+1. **Start the Backend API**:
+   ```powershell
+   .\venv\Scripts\python.exe -m uvicorn app.main:app --app-dir backend --port 8000
+   ```
+2. **Start the Frontend**:
+   ```powershell
+   cd frontend
+   npm run dev
+   ```
+3. Open `http://localhost:5173` in your browser.
 
-## Runtime architecture
+---
 
-1. The browser loads the React app from Vite on `http://localhost:5173`.
-2. Vite proxies `/api` requests to FastAPI on `http://localhost:8000`.
-3. FastAPI reads LiveKit credentials from environment variables and issues a
-   short-lived token at `POST /api/livekit/token`.
-4. The browser connects to LiveKit Cloud using that token.
-5. The LiveKit agent worker joins the room as `my-agent` and uses Google
-   Realtime Voice to converse with the user.
+## 📱 PWA Installation
+When visiting `http://localhost:5173` in Chrome, Edge, or Safari:
+1. Click the **"Install PWA"** button in the sidebar or the browser address bar icon.
+2. The application installs as a standalone desktop or mobile application.
+3. Once installed, it works offline without an internet connection using cached assets and IndexedDB!
 
-## Requirements
+---
 
-- Windows
-- Python 3.10 or newer
-- Node.js and npm
-- A LiveKit Cloud project
-- A Google API key for the Google Realtime plugin
-
-The repository currently includes a local virtual environment at
-`venv\`. For a new checkout, create one with:
-
+## 🧪 Testing and Verification
+Run the backend test suite:
 ```powershell
-py -m venv venv
-.\venv\Scripts\python.exe -m pip install -r backend\requirements.txt
-.\venv\Scripts\python.exe -m pip install "livekit-agents[google]~=1.8" "livekit-plugins-noise-cancellation~=0.2"
+.\venv\Scripts\python.exe -m pytest tests
 ```
-
-Install the frontend dependencies:
-
+Build the frontend:
 ```powershell
-cd frontend
-npm install
-cd ..
-```
-
-## Environment configuration
-
-Copy `frontend\.env.example` to `frontend\.env` and set:
-
-```dotenv
-LIVEKIT_URL=wss://your-project.livekit.cloud
-LIVEKIT_API_KEY=your_livekit_api_key
-LIVEKIT_API_SECRET=your_livekit_api_secret
-GOOGLE_API_KEY=your_google_api_key
-LIVEKIT_AGENT_NAME=my-agent
-```
-
-The backend and agent load this file from `frontend\.env`. Do not commit it or
-expose the API secret to browser code.
-
-For remote hosting, configure `API_AUTH_TOKEN`, `APP_ENV=production`,
-`HTTPS_ONLY=true`, and `ALLOWED_ORIGINS` on the backend host. Set
-`VITE_API_BASE_URL` to the backend's HTTPS origin only when building the public
-frontend. Follow [DEPLOYMENT_SECURITY.md](DEPLOYMENT_SECURITY.md); never place
-backend credentials in frontend code or GitHub Pages build secrets.
-
-## Run the application
-
-### One-click startup
-
-Double-click `start-jarvis.bat`. It starts:
-
-- FastAPI at `http://localhost:8000`
-- Vite at `http://localhost:5173`
-- opens the JARVIS dashboard in the default browser
-
-The launcher prefers `venv\Scripts\python.exe` and falls back to `python` if
-the virtual environment does not exist.
-
-### Manual startup
-
-Open two PowerShell windows from the repository root:
-
-```powershell
-# API
-.\venv\Scripts\python.exe -m uvicorn app.main:app --app-dir backend --port 8000
-
-# Frontend
-cd frontend
-npm run dev
-```
-
-## API endpoints
-
-| Method | Endpoint | Purpose |
-|---|---|---|
-| GET | `/` | Backend status message |
-| GET | `/api/health` | API and LiveKit readiness |
-| GET | `/api/livekit/status` | LiveKit configuration status |
-| POST | `/api/livekit/token` | Issue a room participant token |
-| GET | `/docs` | FastAPI interactive documentation |
-
-Token requests use:
-
-```json
-{
-  "room_name": "jarvis-demo",
-  "participant_identity": "user-123"
-}
-```
-
-## Validation
-
-Run the checks from the repository root:
-
-```powershell
-.\venv\Scripts\python.exe -m pytest -q
-.\venv\Scripts\python.exe -m compileall -q backend
-Push-Location backend
-..\venv\Scripts\python.exe -c "from app.main import app"
-Pop-Location
 cd frontend
 npm run build
-npm run lint
 ```
-
-## Troubleshooting
-
-- **LiveKit is degraded:** verify `LIVEKIT_URL`, `LIVEKIT_API_KEY`, and
-  `LIVEKIT_API_SECRET` in `frontend\.env`, then restart the backend.
-- **The agent cannot import `livekit.agents`:** run it with
-  `.\venv\Scripts\python.exe`, not the system Python, and install the
-  dependencies listed above.
-- **The frontend cannot reach the API:** ensure FastAPI is running on port
-  `8000`; Vite proxies `/api` to that port.
-- **Microphone access fails:** allow microphone permission for the browser and
-  use a secure/localhost origin.
-
-
-1.JARVIS AI Voice Agent is a full-stack personal assistant built with React, Vite, FastAPI, LiveKit, and Google Realtime Voice.
-2.The frontend provides a modern command-center interface with voice controls, dashboard monitoring, settings, and light/dark themes.
-3.The FastAPI backend manages health checks, LiveKit configuration, secure token generation, and API communication.
-4.The LiveKit agent enables real-time voice conversations with Google Realtime Voice and noise cancellation.

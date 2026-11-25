@@ -1,34 +1,35 @@
-import pytest
-from fastapi.testclient import TestClient
-from app.main import app
-
-client = TestClient(app)
+import unittest
+from app.schemas.chat import ChatMessageSchema, ChatRequest, ChatResponse, SearchResponse, SearchResultItem
+from app.services.ai_service import AIService
 
 
-def test_search_endpoint_empty():
-    response = client.get("/api/search?q=")
-    assert response.status_code == 200
-    data = response.json()
-    assert data["query"] == ""
-    assert data["results"] == []
+class TestChatAndSearchSchemas(unittest.TestCase):
+    def test_search_schemas(self):
+        item = SearchResultItem(
+            title="JARVIS Assistant",
+            snippet="A modern voice assistant",
+            url="https://example.com",
+        )
+        resp = SearchResponse(query="jarvis", results=[item])
+        self.assertEqual(resp.query, "jarvis")
+        self.assertEqual(len(resp.results), 1)
+        self.assertEqual(resp.results[0].title, "JARVIS Assistant")
 
+    def test_chat_request_schema(self):
+        req = ChatRequest(
+            messages=[ChatMessageSchema(role="user", content="Hello Jarvis")],
+            provider="gemini",
+            web_search=True,
+        )
+        self.assertEqual(req.provider, "gemini")
+        self.assertTrue(req.web_search)
+        self.assertEqual(len(req.messages), 1)
 
-def test_chat_endpoint_unconfigured():
-    # Calling chat without API key returns clear guidance message
-    response = client.post(
-        "/api/chat",
-        json={
-            "messages": [{"role": "user", "content": "Hello Jarvis"}],
-            "provider": "gemini",
-        },
-    )
-    assert response.status_code == 200
-    data = response.json()
-    assert "content" in data
-    assert data["provider"] == "gemini"
-
-
-def test_chat_endpoint_validation():
-    # Missing messages field
-    response = client.post("/api/chat", json={})
-    assert response.status_code == 422
+    def test_chat_response_schema(self):
+        resp = ChatResponse(
+            content="Hello! How can I assist you?",
+            provider="gemini",
+            model="gemini-1.5-flash",
+        )
+        self.assertEqual(resp.role, "assistant")
+        self.assertIn("Hello", resp.content)

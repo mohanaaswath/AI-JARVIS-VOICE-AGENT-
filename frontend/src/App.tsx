@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import Sidebar from "./components/Sidebar";
 import Dashboard from "./components/Dashboard";
 import VoiceView from "./components/VoiceView";
+import ChatView from "./components/ChatView";
+import NotesView from "./components/NotesView";
+import TasksView from "./components/TasksView";
 import SettingsView from "./components/SettingsView";
 import type { AppView } from "./types";
 
@@ -11,7 +14,7 @@ export default function App() {
     () => (localStorage.getItem("jarvis-theme") as "light" | "dark") || "dark"
   );
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
-    () => window.innerWidth <= 640
+    () => typeof window !== "undefined" && window.innerWidth <= 768
   );
 
   useEffect(() => {
@@ -21,14 +24,20 @@ export default function App() {
 
   const renderView = () => {
     switch (view) {
-      case "dashboard":
-        return <Dashboard onNavigate={setView} />;
       case "voice":
         return <VoiceView />;
+      case "chat":
+        return <ChatView />;
+      case "dashboard":
+        return <Dashboard onNavigate={setView} />;
+      case "notes":
+        return <NotesView />;
+      case "tasks":
+        return <TasksView />;
       case "settings":
         return <SettingsView theme={theme} onThemeChange={setTheme} />;
       default:
-        return <Dashboard onNavigate={setView} />;
+        return <VoiceView />;
     }
   };
 
