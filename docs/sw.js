@@ -1,5 +1,5 @@
 // sw.js — JARVIS PWA Service Worker for Offline & Online Operating Modes
-const CACHE_NAME = "jarvis-pwa-v1";
+const CACHE_NAME = "jarvis-pwa-v2";
 
 const PRECACHE_ASSETS = [
   "./",
