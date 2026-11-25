@@ -62,7 +62,7 @@ class AIService:
         temperature: float,
     ) -> ChatResponse:
         key = client_key or self.settings.GOOGLE_API_KEY
-        chosen_model = model or "gemini-1.5-flash"
+        chosen_model = model or "gemini-3.5-flash"
 
         if not key:
             # Provide helpful response if no key is configured

@@ -205,7 +205,7 @@ export class AssistantOrchestrator {
 
       const model =
         prefs.activeProvider === "gemini"
-          ? prefs.geminiModel
+          ? (prefs.geminiModel || "gemini-3.5-flash")
           : prefs.activeProvider === "openai"
           ? prefs.openaiModel
           : prefs.claudeModel;

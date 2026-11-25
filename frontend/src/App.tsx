@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import Sidebar from "./components/Sidebar";
 import Dashboard from "./components/Dashboard";
 import VoiceView from "./components/VoiceView";
-import ChatView from "./components/ChatView";
 import NotesView from "./components/NotesView";
 import TasksView from "./components/TasksView";
 import SettingsView from "./components/SettingsView";
@@ -26,8 +25,6 @@ export default function App() {
     switch (view) {
       case "voice":
         return <VoiceView />;
-      case "chat":
-        return <ChatView />;
       case "dashboard":
         return <Dashboard onNavigate={setView} />;
       case "notes":

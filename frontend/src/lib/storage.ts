@@ -241,7 +241,7 @@ export async function deleteTask(id: string): Promise<void> {
 const DEFAULT_PREFERENCES: UserPreferences = {
   theme: "dark",
   activeProvider: "gemini",
-  geminiModel: "gemini-1.5-flash",
+  geminiModel: "gemini-3.5-flash",
   openaiModel: "gpt-4o-mini",
   claudeModel: "claude-3-5-sonnet",
   localModelEnabled: false,

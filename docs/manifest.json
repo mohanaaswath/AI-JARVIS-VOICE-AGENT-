@@ -1,0 +1,25 @@
+{
+  "name": "AI JARVIS Voice Assistant",
+  "short_name": "JARVIS",
+  "description": "Futuristic Browser-Based Offline & Online Voice AI Assistant",
+  "start_url": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#08090d",
+  "theme_color": "#67e8f9",
+  "icons": [
+    {
+      "src": "./favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icons.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["productivity", "utilities", "ai"]
+}

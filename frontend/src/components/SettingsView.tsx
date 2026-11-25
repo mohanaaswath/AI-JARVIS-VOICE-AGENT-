@@ -152,17 +152,37 @@ export default function SettingsView({ theme, onThemeChange }: SettingsViewProps
             </div>
 
             {prefs.activeProvider === "gemini" && (
-              <div>
-                <label style={{ fontSize: "0.8rem", color: "var(--text-secondary)", display: "block", marginBottom: "0.4rem" }}>
-                  Google Gemini API Key (Optional client key or configured on backend)
-                </label>
-                <input
-                  type="password"
-                  placeholder="AIzaSy..."
-                  value={prefs.geminiApiKey || ""}
-                  onChange={(e) => handleUpdate({ geminiApiKey: e.target.value })}
-                  style={inputStyle}
-                />
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                <div>
+                  <label style={{ fontSize: "0.8rem", color: "var(--text-secondary)", display: "block", marginBottom: "0.4rem" }}>
+                    Gemini Model
+                  </label>
+                  <select
+                    value={prefs.geminiModel || "gemini-3.5-flash"}
+                    onChange={(e) => handleUpdate({ geminiModel: e.target.value })}
+                    style={inputStyle}
+                  >
+                    <option value="gemini-3.5-flash">gemini-3.5-flash (Recommended)</option>
+                    <option value="gemini-3.8-flash">gemini-3.8-flash</option>
+                    <option value="gemini-flash-latest">gemini-flash-latest</option>
+                    <option value="gemini-3.1-flash-lite">gemini-3.1-flash-lite</option>
+                    <option value="gemini-3.6-flash">gemini-3.6-flash</option>
+                    <option value="gemini-3.7-flash">gemini-3.7-flash</option>
+                    <option value="gemini-4-neon">gemini-4-neon</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontSize: "0.8rem", color: "var(--text-secondary)", display: "block", marginBottom: "0.4rem" }}>
+                    Google Gemini API Key (Optional — uses backend key if blank)
+                  </label>
+                  <input
+                    type="password"
+                    placeholder="AIzaSy..."
+                    value={prefs.geminiApiKey || ""}
+                    onChange={(e) => handleUpdate({ geminiApiKey: e.target.value })}
+                    style={inputStyle}
+                  />
+                </div>
               </div>
             )}
 

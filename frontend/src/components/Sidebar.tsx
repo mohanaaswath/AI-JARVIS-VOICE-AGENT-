@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
   Mic,
-  MessageSquare,
   LayoutDashboard,
   FileText,
   CheckSquare,
@@ -26,7 +25,6 @@ interface SidebarProps {
 
 const NAV_ITEMS: { id: AppView; label: string; icon: React.ReactNode }[] = [
   { id: "voice", label: "Voice Assistant", icon: <Mic size={18} /> },
-  { id: "chat", label: "AI Chat", icon: <MessageSquare size={18} /> },
   { id: "dashboard", label: "Dashboard", icon: <LayoutDashboard size={18} /> },
   { id: "notes", label: "Notes", icon: <FileText size={18} /> },
   { id: "tasks", label: "Tasks", icon: <CheckSquare size={18} /> },

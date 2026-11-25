@@ -1,4 +1,4 @@
-export type AppView = "dashboard" | "voice" | "chat" | "notes" | "tasks" | "settings";
+export type AppView = "dashboard" | "voice" | "notes" | "tasks" | "settings";
 
 export type OperatingMode = "online" | "offline";
 
